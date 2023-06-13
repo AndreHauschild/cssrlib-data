@@ -8,11 +8,11 @@ import sys
 from cssrlib.cssrlib import cssr
 import cssrlib.rinex as rn
 import cssrlib.gnss as gn
-from cssrlib.gnss import rSigRnx
+from cssrlib.gnss import rSigRnx, time2epoch
 from cssrlib.ppprtk import rtkinit, ppprtkpos
 from cssrlib.peph import atxdec, searchpcv
 
-atxfile = '../dat/igs14.atx'
+atxfile = '../data/igs14.atx'
 navfile = '../data/SEPT2650.21P'
 obsfile = '../data/SEPT265G.21O'
 l6file = '../data/2021265G.l6'
@@ -124,6 +124,9 @@ if True:
         sol = nav.xa[0:3] if nav.smode == 4 else nav.x[0:3]
         enu[ne, :] = gn.ecef2enu(pos_ref, sol-xyz_ref)
         smode[ne] = nav.smode
+        ep = gn.time2epoch(nav.t)
+        sys.stdout.write('\r   %2d/%2d/%4d %02d:%02d:%05.2f: %d' % (ep[1], ep[2],
+                                ep[0], ep[3], ep[4], ep[5], nav.smode))
 
     dec.fobs.close()
 

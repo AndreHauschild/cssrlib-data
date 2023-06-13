@@ -7,7 +7,7 @@ import sys
 
 import cssrlib.gnss as gn
 from cssrlib.cssrlib import cssr
-from cssrlib.gnss import ecef2pos, Nav, time2gpst, timediff
+from cssrlib.gnss import ecef2pos, Nav, time2gpst, timediff, time2epoch
 from cssrlib.gnss import rSigRnx
 from cssrlib.peph import atxdec, searchpcv
 from cssrlib.ppprtk import rtkinit, ppprtkpos
@@ -116,6 +116,9 @@ if dec.decode_obsh(obsfile) >= 0:
         sol = nav.xa[0:3] if nav.smode == 4 else nav.x[0:3]
         enu[ne, :] = gn.ecef2enu(pos_ref, sol-xyz_ref)
         smode[ne] = nav.smode
+        ep = gn.time2epoch(nav.t)
+        sys.stdout.write('\r   %2d/%2d/%4d %02d:%02d:%05.2f: %d' % (ep[1], ep[2],
+                            ep[0], ep[3], ep[4], ep[5], nav.smode))
 
     fc.close()
     dec.fobs.close()

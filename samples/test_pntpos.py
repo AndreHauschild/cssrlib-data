@@ -3,9 +3,10 @@
 """
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
 from cssrlib.rinex import rnxdec
 from cssrlib.gnss import ecef2pos, timediff, dops, ecef2enu
-from cssrlib.gnss import rSigRnx
+from cssrlib.gnss import rSigRnx, time2epoch
 from cssrlib.pntpos import stdinit, pntpos
 
 xyz_ref = [-3962108.673,   3381309.574,   3668678.638]
@@ -42,6 +43,10 @@ if dec.decode_obsh(obsfile) >= 0:
         dop[ne, :] = dops(az, el)
         enu[ne, :] = ecef2enu(pos_ref, sol[ne, 0:3]-xyz_ref)
         nsat[ne] = len(el)
+        ep = time2epoch(obs.t)
+        sys.stdout.write('\r   %2d/%2d/%4d %02d:%02d:%05.2f' % (ep[1], ep[2],
+                                ep[0], ep[3], ep[4], ep[5]))
+
     dec.fobs.close()
 
 

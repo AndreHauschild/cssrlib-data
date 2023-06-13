@@ -232,4 +232,4 @@ plotFileName = '.'.join(('test_pppigs', plotFileFormat))
 
 plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight')
 
-# plt.show()
+plt.show()
