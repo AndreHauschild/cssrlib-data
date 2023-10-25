@@ -5,7 +5,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import numpy as np
-from os.path import expanduser
+from os.path import basename, expanduser, splitext
 from sys import stdout
 
 import cssrlib.gnss as gn
@@ -39,7 +39,11 @@ tropo = 'Hopfi'
 bdir = expanduser('~/Projects/PPP_Kepler/SIM_OBER')
 
 obsfile = bdir+'/_obs/EPOS_OBSDATA_{}_OBER_100321.rnx.rnxman'.format(tropo)
+logfile = splitext(basename(obsfile))[0]+'.log'
+pltfile = logfile.replace('.log', '.eps')
 
+# orbit and biases
+#
 orbfile = bdir+'/_sp3/a0_sim_MEO_OBER_Hopfi.sp3.sp3man'
 bsxfile = bdir+'/_bia/HARDWARE_DELAYS_{}_OBER_100321.bsx'.format(tropo)
 
@@ -101,13 +105,16 @@ if rnx.decode_obsh(obsfile) >= 0:
 
     # Initialize position
     #
-    ppp = pppos(nav, rnx.pos, 'test_pppkepler.log')
-    nav.ephopt = 4  # IGS
+    ppp = pppos(nav, rnx.pos, logfile)
+    nav.ephopt = 4  # SP3
     nav.armode = 0
     nav.thresar = 2.0
 
     nav.elmin = np.deg2rad(7.5)
     nav.cnr_min = 0
+
+    # Zero process noise for fixed-position model
+    # nav.q[0:3] = 0.0
 
     if 'Hopfi' in obsfile:
         nav.trpModel = uTropoModel.HOPF
@@ -272,8 +279,9 @@ elif fig_type == 2:
     plt.legend()
     # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
 
-plotFileFormat = 'eps'
-plotFileName = '.'.join(('test_pppkepler', plotFileFormat))
+
+plotFileFormat = splitext(pltfile)[1][1:]
+plotFileName = '.'.join((pltfile, plotFileFormat))
 
 plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight', dpi=300)
 # plt.show()
