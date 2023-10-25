@@ -5,6 +5,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import numpy as np
+from os.path import expanduser
 from sys import stdout
 
 import cssrlib.gnss as gn
@@ -35,7 +36,7 @@ pos_ref = ecef2pos(xyz_ref)
 #tropo = 'Niell'
 tropo = 'Hopfi'
 
-bdir = '/home/haus_an/Projects/PPP_Kepler/SIM_OBER'
+bdir = expanduser('~/Projects/PPP_Kepler/SIM_OBER')
 
 obsfile = bdir+'/_obs/EPOS_OBSDATA_{}_OBER_100321.rnx.rnxman'.format(tropo)
 
@@ -103,12 +104,10 @@ if rnx.decode_obsh(obsfile) >= 0:
     ppp = pppos(nav, rnx.pos, 'test_pppkepler.log')
     nav.ephopt = 4  # IGS
     nav.armode = 0
-
-    nav.elmin = np.deg2rad(5.0)
     nav.thresar = 2.0
-    nav.cnr_min = 0
 
-    nav.useRxPco = False
+    nav.elmin = np.deg2rad(7.5)
+    nav.cnr_min = 0
 
     if 'Hopfi' in obsfile:
         nav.trpModel = uTropoModel.HOPF
