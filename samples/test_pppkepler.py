@@ -226,7 +226,6 @@ if rnx.decode_obsh(obsfile) >= 0:
     if nav.fout is not None:
         nav.fout.close()
 
-fig_type = 1
 ylim = 1.0
 
 idx4 = np.where(smode == 4)[0]
@@ -238,50 +237,31 @@ fig.set_rasterized(True)
 
 fmt = '%H:%M'
 
-if fig_type == 1:
+lbl_t = ['East [m]', 'North [m]', 'Up [m]']
 
-    lbl_t = ['East [m]', 'North [m]', 'Up [m]']
+for k in range(3):
+    plt.subplot(4, 1, k+1)
+    plt.plot_date(t[idx0], enu[idx0, k], 'r.')
+    plt.plot_date(t[idx5], enu[idx5, k], 'y.')
+    plt.plot_date(t[idx4], enu[idx4, k], 'g.')
 
-    for k in range(3):
-        plt.subplot(4, 1, k+1)
-        plt.plot_date(t[idx0], enu[idx0, k], 'r.')
-        plt.plot_date(t[idx5], enu[idx5, k], 'y.')
-        plt.plot_date(t[idx4], enu[idx4, k], 'g.')
-
-        plt.ylabel(lbl_t[k])
-        plt.grid()
-        plt.ylim([-ylim, ylim])
-        plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-
-    plt.subplot(4, 1, 4)
-    plt.plot_date(t[idx0], ztd[idx0]*1e2, 'r.', markersize=8, label='none')
-    plt.plot_date(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
-    plt.plot_date(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
-    plt.ylabel('ZTD [cm]')
+    plt.ylabel(lbl_t[k])
     plt.grid()
+    plt.ylim([-ylim, ylim])
     plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
-    plt.xlabel('Time [HH:MM]')
-    plt.legend()
+plt.subplot(4, 1, 4)
+plt.plot_date(t[idx0], ztd[idx0]*1e2, 'r.', markersize=8, label='none')
+plt.plot_date(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
+plt.plot_date(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
+plt.ylabel('ZTD [cm]')
+plt.grid()
+plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
-elif fig_type == 2:
-
-    ax = fig.add_subplot(111)
-
-    # plt.plot(enu[idx0, 0], enu[idx0, 1], 'r.', label='stdpos')
-    plt.plot(enu[idx5, 0], enu[idx5, 1], 'y.', label='float')
-    plt.plot(enu[idx4, 0], enu[idx4, 1], 'g.', label='fix')
-
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.grid()
-    plt.axis('equal')
-    plt.legend()
-    # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
+plt.xlabel('Time [HH:MM]')
+plt.legend()
 
 
 plotFileFormat = splitext(pltfile)[1][1:]
-plotFileName = '.'.join((pltfile, plotFileFormat))
-
-plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight', dpi=300)
+plt.savefig(pltfile, format=plotFileFormat, bbox_inches='tight', dpi=300)
 # plt.show()
