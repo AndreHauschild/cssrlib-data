@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
  static test for PPP (Kepler)
 """
@@ -5,6 +7,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import numpy as np
+import os
 from os.path import basename, expanduser, splitext
 from sys import stdout
 
@@ -107,6 +110,7 @@ if rnx.decode_obsh(obsfile) >= 0:
     #
     ppp = pppos(nav, rnx.pos, logfile)
     nav.ephopt = 4  # SP3
+
     nav.armode = 0
     nav.thresar = 2.0
 
@@ -264,4 +268,5 @@ plt.legend()
 
 plotFileFormat = splitext(pltfile)[1][1:]
 plt.savefig(pltfile, format=plotFileFormat, bbox_inches='tight', dpi=300)
-# plt.show()
+
+os.system("./plot_pppkepler.py {}".format(logfile))
