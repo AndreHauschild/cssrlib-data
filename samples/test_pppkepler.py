@@ -118,10 +118,12 @@ if rnx.decode_obsh(obsfile) >= 0:
     nav.cnr_min = 0
 
     # Zero process noise for fixed-position model
+    #
     # nav.q[0:3] = 0.0
 
-    if 'Hopfi' in obsfile:
-        nav.trpModel = uTropoModel.HOPF
+    # Use Hopfield tropo model
+    #
+    nav.trpModel = uTropoModel.HOPF
 
     if 'UNKNOWN' in rnx.ant:
         rnx.ant = 'AOAD/M_T        NONE'
@@ -230,6 +232,7 @@ if rnx.decode_obsh(obsfile) >= 0:
     if nav.fout is not None:
         nav.fout.close()
 
+"""
 ylim = 1.0
 
 idx4 = np.where(smode == 4)[0]
@@ -268,5 +271,8 @@ plt.legend()
 
 plotFileFormat = splitext(pltfile)[1][1:]
 plt.savefig(pltfile, format=plotFileFormat, bbox_inches='tight', dpi=300)
+"""
 
-os.system("./plot_pppkepler.py {}".format(logfile))
+# Call the plotting script
+#
+os.system("{}/plot_pppkepler.py {}".format(os.getcwd(), logfile))
