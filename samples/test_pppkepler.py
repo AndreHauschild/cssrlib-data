@@ -94,6 +94,9 @@ sol = np.zeros((nep, 4))
 ztd = np.zeros((nep, 1))
 smode = np.zeros(nep, dtype=int)
 
+resc = np.ones((nep, gn.uGNSS.MAXSAT, nav.nf))*np.nan
+resp = np.ones((nep, gn.uGNSS.MAXSAT, nav.nf))*np.nan
+
 # Logging level
 #
 nav.monlevel = 0  # TODO: enabled for testing!
@@ -197,6 +200,9 @@ if rnx.decode_obsh(obsfile) >= 0:
             if nav.smode == 4 else nav.x[ppp.IT(nav.na)]
         smode[ne] = nav.smode
 
+        resc[ne, :, :] = nav.resc
+        resp[ne, :, :] = nav.resp
+
         nav.fout.write("{} {:14.4f} {:14.4f} {:14.4f} "
                        "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, mode {:1d}\n"
                        .format(time2str(obs.t),
@@ -232,12 +238,35 @@ if rnx.decode_obsh(obsfile) >= 0:
     if nav.fout is not None:
         nav.fout.close()
 
-"""
-ylim = 1.0
 
+# Solution index
+#
 idx4 = np.where(smode == 4)[0]
 idx5 = np.where(smode == 5)[0]
+idxA = np.where(smode != 0)[0]
 idx0 = np.where(smode == 0)[0]
+
+# Residual statistics
+#
+print()
+print("Residual statistics")
+print()
+for f in range(nav.nf):
+    print("Code  {:1d} {:5.2f} +/- {:5.2f} cm"
+          .format(f,
+                  np.nanmean(resc[idxA, :, f])*1e2,
+                  np.nanstd(resc[idxA, :, f])*1e2))
+print()
+for f in range(nav.nf):
+    print("Phase {:1d} {:5.2f} +/- {:5.2f} cm"
+          .format(f,
+                  np.nanmean(resp[idxA, :, f])*1e2,
+                  np.nanstd(resp[idxA, :, f])*1e2))
+print()
+
+# Plot results
+#
+ylim = 1.0
 
 fig = plt.figure(figsize=[7, 9])
 fig.set_rasterized(True)
@@ -247,8 +276,7 @@ fmt = '%H:%M'
 lbl_t = ['East [m]', 'North [m]', 'Up [m]']
 
 for k in range(3):
-    plt.subplot(4, 1, k+1)
-    plt.plot_date(t[idx0], enu[idx0, k], 'r.')
+    plt.subplot(6, 1, k+1)
     plt.plot_date(t[idx5], enu[idx5, k], 'y.')
     plt.plot_date(t[idx4], enu[idx4, k], 'g.')
 
@@ -257,22 +285,39 @@ for k in range(3):
     plt.ylim([-ylim, ylim])
     plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
-plt.subplot(4, 1, 4)
-plt.plot_date(t[idx0], ztd[idx0]*1e2, 'r.', markersize=8, label='none')
+plt.subplot(6, 1, 4)
 plt.plot_date(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
 plt.plot_date(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
 plt.ylabel('ZTD [cm]')
 plt.grid()
 plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-
-plt.xlabel('Time [HH:MM]')
 plt.legend()
 
+plt.subplot(6, 1, 5)
+for f in range(nav.nf):
+    plt.plot_date(t[idx5], resc[idx5, :, f]*1e2,
+                  'y.', markersize=8)
+    plt.plot_date(t[idx4], resc[idx4, :, f]*1e2,
+                  'g.', markersize=8)
+plt.ylabel('Code [cm]')
+plt.grid()
+plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
+
+plt.subplot(6, 1, 6)
+for f in range(nav.nf):
+    plt.plot_date(t[idx5], resp[idx5, :, f]*1e2,
+                  'y.', markersize=8)
+    plt.plot_date(t[idx4], resp[idx4, :, f]*1e2,
+                  'g.', markersize=8)
+plt.ylabel('Phase [cm]')
+plt.grid()
+plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
+
+plt.xlabel('Time [HH:MM]')
 
 plotFileFormat = splitext(pltfile)[1][1:]
 plt.savefig(pltfile, format=plotFileFormat, bbox_inches='tight', dpi=300)
-"""
 
 # Call the plotting script
 #
-os.system("{}/plot_pppkepler.py {}".format(os.getcwd(), logfile))
+os.system("{}/plot_pppkepler.py {}".format(os.path.dirname(__file__), logfile))
