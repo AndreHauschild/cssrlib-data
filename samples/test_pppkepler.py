@@ -86,7 +86,7 @@ atxfile = bdir+'/_atx/PHASCENT1_igs08.atx_LEO_GAL_6COSMIC_sim'
 atx = atxdec()
 atx.readpcv(atxfile)
 
-# Intialize data structures for results
+# Initialize data structures for results
 #
 t = np.zeros(nep)
 enu = np.ones((nep, 3))*np.nan
@@ -295,20 +295,16 @@ plt.legend()
 
 plt.subplot(6, 1, 5)
 for f in range(nav.nf):
-    plt.plot_date(t[idx5], resc[idx5, :, f]*1e2,
-                  'y.', markersize=8)
-    plt.plot_date(t[idx4], resc[idx4, :, f]*1e2,
-                  'g.', markersize=8)
+    plt.plot_date(t[idx5], resc[idx5, :, f]*1e2, 'y.', markersize=8)
+    plt.plot_date(t[idx4], resc[idx4, :, f]*1e2, 'g.', markersize=8)
 plt.ylabel('Code [cm]')
 plt.grid()
 plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
 plt.subplot(6, 1, 6)
 for f in range(nav.nf):
-    plt.plot_date(t[idx5], resp[idx5, :, f]*1e2,
-                  'y.', markersize=8)
-    plt.plot_date(t[idx4], resp[idx4, :, f]*1e2,
-                  'g.', markersize=8)
+    plt.plot_date(t[idx5], resp[idx5, :, f]*1e2, 'y.', markersize=8)
+    plt.plot_date(t[idx4], resp[idx4, :, f]*1e2, 'g.', markersize=8)
 plt.ylabel('Phase [cm]')
 plt.grid()
 plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
