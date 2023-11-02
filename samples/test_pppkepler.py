@@ -120,6 +120,10 @@ if rnx.decode_obsh(obsfile) >= 0:
     nav.elmin = np.deg2rad(7.5)
     nav.cnr_min = 0
 
+    # Match process noise of 20cm/2mm for EPOS simulations
+    #
+    nav.err = [0, 0.000, 0.002]       # [m] sigma
+
     # Zero process noise for fixed-position model
     #
     # nav.q[0:3] = 0.0
@@ -128,6 +132,8 @@ if rnx.decode_obsh(obsfile) >= 0:
     #
     nav.trpModel = uTropoModel.HOPF
 
+    # Replace unkown antenna
+    #
     if 'UNKNOWN' in rnx.ant:
         rnx.ant = 'AOAD/M_T        NONE'
 
