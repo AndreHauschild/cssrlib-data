@@ -140,7 +140,7 @@ def main():
         rmsUpconv = np.sqrt(np.mean(enu[epoConv:, 2]**2))
 
         print()
-        print("Time until convergence {:3.0f} min ({:3d} epochs)"
+        print("Time until convergence {:4.1f} min ({:3d} epochs)"
               .format(t[epoConv][0]*24*60, epoConv))
         print("RMS conv  2D solution {:4.1f} cm".format(rms2Dconv*1e2))
         print("RMS conv  up solution {:4.1f} cm".format(rmsUpconv*1e2))
