@@ -38,9 +38,17 @@ def timeAxis(ax):
 
     return ax
 
+# Define RMS errors
+#
+
+
+def rms(v):
+    return np.sqrt(np.mean(v**2))
 
 # Main function
 #
+
+
 def main():
 
     # Parse command line arguments
@@ -126,24 +134,29 @@ def main():
         print()
         print("Solution statistics:")
         print()
+
         print("RMS float 2D solution {:4.1f} cm".format(rms2Dfloat*1e2))
         if len(idx4) > 0:
             print("RMS fixed 2D solution {:4.1f} cm".format(rms2Dfixed*1e2))
             print("RMS fixed up solution {:4.1f} cm".format(rmsUpfixed*1e2))
+        print()
 
-        # Find last index over conversion limit
+        # Find last index with solution over conversion limit
         #
         limConv = 0.1
         epoConv = np.where(enu[idx5, 3] > limConv)[0][-1]
 
-        rms2Dconv = np.sqrt(np.mean(enu[epoConv:, 3]**2))
-        rmsUpconv = np.sqrt(np.mean(enu[epoConv:, 2]**2))
-
+        print("Converged solution")
         print()
         print("Time until convergence {:4.1f} min ({:3d} epochs)"
               .format(t[epoConv][0]*24*60, epoConv))
-        print("RMS conv  2D solution {:4.1f} cm".format(rms2Dconv*1e2))
-        print("RMS conv  up solution {:4.1f} cm".format(rmsUpconv*1e2))
+        print()
+        for i, s in enumerate(("East", "North", "Up", "2D")):
+            print("{:5s} {:4.1f}+/-{:2.1f} cm (RMS {:4.1f} cm)"
+                  .format(s,
+                          np.mean(enu[epoConv:, i])*1e2,
+                          np.std(enu[epoConv:, i])*1e2,
+                          rms(enu[epoConv:, i])*1e2))
 
         fig = plt.figure(figsize=[9, 6])
         fig.set_rasterized(True)
