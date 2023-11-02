@@ -12,7 +12,7 @@ from os.path import basename, expanduser, splitext
 from sys import stdout
 
 import cssrlib.gnss as gn
-from cssrlib.gnss import ecef2pos, Nav
+from cssrlib.gnss import ecef2pos, enu2xyz, Nav
 from cssrlib.gnss import time2doy, time2str, timediff, epoch2time
 from cssrlib.gnss import rSigRnx
 from cssrlib.gnss import sys2str
@@ -27,14 +27,18 @@ from cssrlib.rinex import rnxdec
 #
 ep = [2010, 3, 21, 0, 0, 0]
 xyz_ref = [4186548.9344, 835107.0779, 4723754.0722]
+ecc_ref = [0.0, 0.0, 0.0460]
+
+pos_ref = ecef2pos(xyz_ref)
+xyz_ref = xyz_ref + enu2xyz(pos_ref)@ecc_ref
+
+pos_ref = ecef2pos(xyz_ref)
 
 time = epoch2time(ep)
 year = ep[0]
 doy = int(time2doy(time))
 
-nep = 480
-
-pos_ref = ecef2pos(xyz_ref)
+nep = int(4*3600/30)
 
 #tropo = 'Niell'
 tropo = 'Hopfi'
@@ -126,16 +130,15 @@ if rnx.decode_obsh(obsfile) >= 0:
 
     # Zero process noise for fixed-position model
     #
-    # nav.q[0:3] = 0.0
+    #nav.q[0:3] = 0.0
 
     # Use Hopfield tropo model
     #
     nav.trpModel = uTropoModel.HOPF
 
-    # Replace unkown antenna
+    # Do not use receiver antenna corrections
     #
-    if 'UNKNOWN' in rnx.ant:
-        rnx.ant = 'AOAD/M_T        NONE'
+    nav.useRxPco = False
 
     # Get equipment information
     #
