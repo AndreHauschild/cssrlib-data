@@ -100,6 +100,7 @@ sol = np.zeros((nep, 4))
 ztd = np.zeros((nep, 1))
 smode = np.zeros(nep, dtype=int)
 
+ion = np.ones((nep, gn.uGNSS.MAXSAT))*np.nan
 resc = np.ones((nep, gn.uGNSS.MAXSAT, nav.nf))*np.nan
 resp = np.ones((nep, gn.uGNSS.MAXSAT, nav.nf))*np.nan
 
@@ -211,6 +212,10 @@ if rnx.decode_obsh(obsfile) >= 0:
             if nav.smode == 4 else nav.x[ppp.IT(nav.na)]
         smode[ne] = nav.smode
 
+        for sat in range(gn.uGNSS.MAXSAT):
+            ion[ne, sat] = nav.xa[ppp.II(sat+1, nav.na)] \
+                if nav.smode == 4 else nav.x[ppp.II(sat+1, nav.na)]
+
         resc[ne, :, :] = nav.resc
         resp[ne, :, :] = nav.resp
 
@@ -287,7 +292,7 @@ fmt = '%H:%M'
 lbl_t = ['East [m]', 'North [m]', 'Up [m]']
 
 for k in range(3):
-    plt.subplot(6, 1, k+1)
+    plt.subplot(7, 1, k+1)
     plt.plot_date(t[idx5], enu[idx5, k], 'y.')
     plt.plot_date(t[idx4], enu[idx4, k], 'g.')
 
@@ -296,7 +301,7 @@ for k in range(3):
     plt.ylim([-ylim, ylim])
     plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
-plt.subplot(6, 1, 4)
+plt.subplot(7, 1, 4)
 plt.plot_date(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
 plt.plot_date(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
 plt.ylabel('ZTD [cm]')
@@ -304,7 +309,16 @@ plt.grid()
 plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 plt.legend()
 
-plt.subplot(6, 1, 5)
+ion = np.where(ion == 0, np.nan, ion)
+
+plt.subplot(7, 1, 5)
+plt.plot_date(t[idx5], ion[idx5], 'y.', markersize=8, label='float')
+plt.plot_date(t[idx4], ion[idx4], 'g.', markersize=8, label='fix')
+plt.ylabel('ION [m]')
+plt.grid()
+plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
+
+plt.subplot(7, 1, 6)
 for f in range(nav.nf):
     plt.plot_date(t[idx5], resc[idx5, :, f]*1e2, 'y.', markersize=8)
     plt.plot_date(t[idx4], resc[idx4, :, f]*1e2, 'g.', markersize=8)
@@ -312,7 +326,7 @@ plt.ylabel('Code [cm]')
 plt.grid()
 plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
-plt.subplot(6, 1, 6)
+plt.subplot(7, 1, 7)
 for f in range(nav.nf):
     plt.plot_date(t[idx5], resp[idx5, :, f]*1e2, 'y.', markersize=8)
     plt.plot_date(t[idx4], resp[idx4, :, f]*1e2, 'g.', markersize=8)
