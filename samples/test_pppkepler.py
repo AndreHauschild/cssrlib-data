@@ -26,6 +26,14 @@ from cssrlib.rinex import rnxdec
 # Start epoch and number of epochs
 #
 ep = [2010, 3, 21, 0, 0, 0]
+nep = int(4*3600/30)
+
+time = epoch2time(ep)
+year = ep[0]
+doy = int(time2doy(time))
+
+# Reference position and eccentricity
+#
 xyz_ref = [4186548.9344, 835107.0779, 4723754.0722]
 ecc_ref = [0.0, 0.0, 0.0460]
 
@@ -33,12 +41,6 @@ pos_ref = ecef2pos(xyz_ref)
 xyz_ref = xyz_ref + enu2xyz(pos_ref)@ecc_ref
 
 pos_ref = ecef2pos(xyz_ref)
-
-time = epoch2time(ep)
-year = ep[0]
-doy = int(time2doy(time))
-
-nep = int(4*3600/30)
 
 #tropo = 'Niell'
 tropo = 'Hopfi'
