@@ -47,7 +47,7 @@ bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
 # Load site positions
 #
 posdata = {}
-posfile = bdir + '/GSSs_EPOS.txt'
+posfile = bdir + '/_snx/GSSs_EPOS.txt'
 with open(posfile, 'r') as f:
 
     for line in f.readlines():
@@ -67,7 +67,7 @@ with open(posfile, 'r') as f:
         t0 = datetime.strptime(fields[12], '%d%m%y')
 
         posdata[site] = pos + vel * \
-            (time2dt(time)-t0).total_seconds()/365.25/24/3600
+            (time2dt(time)-t0).total_seconds()/86400/365.25
 
 
 # Loop over sites
@@ -196,7 +196,7 @@ for site in sites:
         nav.fout.write("Receiver: {}\n".format(rnx.rcv))
         nav.fout.write("Antenna : {}\n".format(rnx.ant))
         nav.fout.write("Position: {:13.4f} {:13.4f} {:13.4f}\n"
-                       .format(pos_ref[0], pos_ref[1], pos_ref[2]))
+                       .format(xyz_ref[0], xyz_ref[1], xyz_ref[2]))
         nav.fout.write("\n")
 
         if 'UNKNOWN' in rnx.ant or rnx.ant.strip() == "":
