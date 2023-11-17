@@ -68,7 +68,9 @@ def main():
     #
     args = parser.parse_args()
 
-    # Get RINEX files
+    data = {}
+
+    # Get solution files
     #
     inpFileNames = glob(expanduser(args.inpFileName))
     for inpFileName in sorted(inpFileNames):
@@ -157,7 +159,15 @@ def main():
                           np.mean(enu[epoConv:, i])*1e2,
                           np.std(enu[epoConv:, i])*1e2,
                           rms(enu[epoConv:, i])*1e2))
+        print()
 
+        # Convergence time statistics
+        #
+        site = inpFileName.split('_')[-1][0:4]
+        data.update({site: t[epoConv][0]*24*60})
+
+        # Plot
+        #
         fig = plt.figure(figsize=[9, 6])
         fig.set_rasterized(True)
 
@@ -210,6 +220,26 @@ def main():
         plt.savefig(plotFileName, format=plotFileFormat,
                     bbox_inches='tight', dpi=300)
         # plt.show()
+
+    # Overall statistics
+    #
+    print()
+    print("Convergence time statistics:")
+    print()
+
+    values = list(data.values())
+    mean = np.mean(values)
+    sigma = np.std(values)
+
+    def sort_by_time(item):
+        return item[1]
+
+    sorted_data = dict(sorted(data.items(), key=sort_by_time))
+
+    for site, dt in sorted_data.items():
+        print("{:4s}  {:4.2f} min".format(site, dt))
+    print()
+    print("mean  {:4.2f} +/- {:3.1f} min".format(mean, sigma))
 
 
 # Main program
