@@ -47,28 +47,31 @@ bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
 # Load site positions
 #
 posdata = {}
-posfile = bdir + '/_snx/GSSs_EPOS.txt'
+posfile = bdir + '/_snx/STATFILE_18GAL.pos'
 with open(posfile, 'r') as f:
 
     for line in f.readlines():
 
-        if line[36] != '~':
+        if len(line) < 112:
             continue
 
-        fields = line[23:].split()
+        fields = line.split()
 
-        site = line[0:4].upper()
-        pos = np.array([float(fields[0]),
-                        float(fields[2]),
+        site = fields[0]
+        t0 = datetime.strptime(fields[1], '%Y-%m-%d')
+
+        pos = np.array([float(fields[2]),
+                        float(fields[3]),
                         float(fields[4])])
-        vel = np.array([float(fields[6]),
-                        float(fields[8]),
-                        float(fields[10])])
-        t0 = datetime.strptime(fields[12], '%d%m%y')
+        vel = np.array([float(fields[5]),
+                        float(fields[6]),
+                        float(fields[7])])
+        ecc = np.array([float(fields[10]),  # UNE -> ENU!
+                        float(fields[9]),
+                        float(fields[8])])
+        xyz = pos + vel * (time2dt(time)-t0).total_seconds()/86400/365.25
 
-        posdata[site] = pos + vel * \
-            (time2dt(time)-t0).total_seconds()/86400/365.25
-
+        posdata.update({site: {'xyz': xyz, 'ecc': ecc}})
 
 # Loop over sites
 #
@@ -76,8 +79,8 @@ for site in sites:
 
     # Reference position and eccentricity
     #
-    xyz_ref = posdata[site]
-    ecc_ref = [0.0, 0.0, 0.0460]
+    xyz_ref = posdata[site]['xyz']
+    ecc_ref = posdata[site]['ecc']
 
     pos_ref = ecef2pos(xyz_ref)
     xyz_ref = xyz_ref + enu2xyz(pos_ref)@ecc_ref
