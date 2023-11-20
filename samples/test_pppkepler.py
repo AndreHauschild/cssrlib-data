@@ -32,17 +32,26 @@ def time2dt(t):
 # Start epoch and number of epochs
 #
 ep = [2010, 3, 22, 0, 0, 0]
-tep = 1
+
+tep = 10  # step size
 nep = int(1*3600//tep)
 
 time = epoch2time(ep)
 year = ep[0]
 doy = int(time2doy(time))
 
+# Static or kinematic processing
+#
+static = True
+
+# Base directory
+#
+bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
+
+# Sites for process
+#
 sites = ('AZOR', 'CANA', 'FALK', 'FUCI', 'JANM', 'KERG', 'KOUR', 'MADE', 'MARQ',
          'NOUM', 'OBER', 'PAPE', 'REUN', 'SVAL', 'TERA', 'TROL', 'ULAB', 'WALL')
-
-bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
 
 # Load site positions
 #
@@ -73,6 +82,11 @@ with open(posfile, 'r') as f:
 
         posdata.update({site: {'xyz': xyz, 'ecc': ecc}})
 
+
+# Template observation file
+#
+tmpfile = bdir + '/_obs/GNSSDATA_i0_sim_VAL_Hopfi_MEO_CLK_READ_1s_{}.rnx'
+
 # Loop over sites
 #
 for site in sites:
@@ -87,9 +101,9 @@ for site in sites:
 
     pos_ref = ecef2pos(xyz_ref)
 
-    obsfile = bdir + \
-        '/_obs/GNSSDATA_i0_sim_VAL_Hopfi_MEO_CLK_READ_1s_{}.rnx'.format(site)
-
+    # Substitute station name
+    #
+    obsfile = tmpfile.format(site)
     logfile = splitext(basename(obsfile))[0]+'.log'
     pltfile = logfile.replace('.log', '.eps')
 
@@ -178,7 +192,8 @@ for site in sites:
 
         # Zero process noise for fixed-position model
         #
-        nav.q[0:3] = 0.0
+        if static:
+            nav.q[0:3] = 0.0
 
         # Use Hopfield tropo model
         #
@@ -237,59 +252,66 @@ for site in sites:
         while time > obs.t and obs.t.time != 0:
             obs = rnx.decode_obs()
 
+        # Set initial epoch
+        #
+        nav.t = deepcopy(obs.t)
+        t0 = deepcopy(obs.t)
+        ne = 0
+
         # Loop over number of epoch from file start
         #
-        for ne in range(nep):
+        while ne < nep and obs.t.time != 0:
 
-            # Set initial epoch
+            # Skip epochs not fitting the step size
             #
-            if ne == 0:
-                nav.t = deepcopy(obs.t)
-                t0 = deepcopy(obs.t)
+            if int(timediff(obs.t, t0)) % tep == 0:
 
-            # Call PPP module with IGS products
-            #
-            ppp.process(obs, orb=orb, bsx=bsx)
+                # Call PPP module with IGS products
+                #
+                ppp.process(obs, orb=orb, bsx=bsx)
 
-            # Save output
-            #
-            t[ne] = timediff(nav.t, t0)/86400.0
+                # Save output
+                #
+                t[ne] = timediff(nav.t, t0)/86400.0
 
-            sol = nav.xa[0:3] if nav.smode == 4 else nav.x[0:3]
-            enu[ne, :] = gn.ecef2enu(pos_ref, sol-xyz_ref)
+                sol = nav.xa[0:3] if nav.smode == 4 else nav.x[0:3]
+                enu[ne, :] = gn.ecef2enu(pos_ref, sol-xyz_ref)
+                err2D = np.sqrt(enu[ne, 0]**2+enu[ne, 1]**2)
 
-            ztd[ne] = nav.xa[ppp.IT(nav.na)] \
-                if nav.smode == 4 else nav.x[ppp.IT(nav.na)]
-            smode[ne] = nav.smode
+                ztd[ne] = nav.xa[ppp.IT(nav.na)] \
+                    if nav.smode == 4 else nav.x[ppp.IT(nav.na)]
+                smode[ne] = nav.smode
 
-            for sat in range(gn.uGNSS.MAXSAT):
-                ion[ne, sat] = nav.xa[ppp.II(sat+1, nav.na)] \
-                    if nav.smode == 4 else nav.x[ppp.II(sat+1, nav.na)]
+                for sat in range(gn.uGNSS.MAXSAT):
+                    ion[ne, sat] = nav.xa[ppp.II(sat+1, nav.na)] \
+                        if nav.smode == 4 else nav.x[ppp.II(sat+1, nav.na)]
 
-            resc[ne, :, :] = nav.resc
-            resp[ne, :, :] = nav.resp
+                resc[ne, :, :] = nav.resc
+                resp[ne, :, :] = nav.resp
 
-            nav.fout.write("{} {:14.4f} {:14.4f} {:14.4f} "
-                           "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, mode {:1d}\n"
-                           .format(time2str(obs.t),
-                                   sol[0], sol[1], sol[2],
-                                   enu[ne, 0], enu[ne, 1], enu[ne, 2],
-                                   np.sqrt(enu[ne, 0]**2+enu[ne, 1]**2),
-                                   smode[ne]))
+                nav.fout.write("{} {:14.4f} {:14.4f} {:14.4f} "
+                               "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, "
+                               "mode {:1d}\n"
+                               .format(time2str(obs.t),
+                                       sol[0], sol[1], sol[2],
+                                       enu[ne, 0], enu[ne, 1], enu[ne, 2],
+                                       err2D, smode[ne]))
 
-            # Log to standard output
-            #
-            stdout.write('\r {} ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, mode {:1d}'
-                         .format(time2str(obs.t),
-                                 enu[ne, 0], enu[ne, 1], enu[ne, 2],
-                                 np.sqrt(enu[ne, 0]**2+enu[ne, 1]**2),
-                                 smode[ne]))
+                # Log to standard output
+                #
+                stdout.write('\r{} {} ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, '
+                             'mode {:1d}'
+                             .format(site, time2str(obs.t),
+                                     enu[ne, 0], enu[ne, 1], enu[ne, 2],
+                                     err2D, smode[ne]))
+
+                # Increase epoch counter
+                #
+                ne += 1
 
             # Get new epoch, exit after last epoch
             #
             obs = rnx.decode_obs()
-            if obs.t.time == 0:
-                break
 
         # Send line-break to stdout
         #
@@ -388,6 +410,10 @@ for site in sites:
     plotFileFormat = splitext(pltfile)[1][1:]
     plt.savefig(pltfile, format=plotFileFormat, bbox_inches='tight', dpi=300)
 
-    # Call the plotting script
-    #
-    os.system("{}/plot_pppkepler.py {}".format(os.path.dirname(__file__), logfile))
+# Call the plotting and statisctics script
+#
+logfile = tmpfile.format('*')
+statfile = "statistics_{:02d}s.log".format(tep)
+
+os.system('{}/plot_pppkepler.py "{}" > {}'
+          .format(os.path.dirname(__file__), logfile, statfile))
