@@ -230,6 +230,7 @@ def main():
     values = list(data.values())
     mean = np.mean(values)
     sigma = np.std(values)
+    p95 = np.percentile(values, 95)
 
     def sort_by_time(item):
         return item[1]
@@ -237,9 +238,10 @@ def main():
     sorted_data = dict(sorted(data.items(), key=sort_by_time))
 
     for site, dt in sorted_data.items():
-        print("{:4s}  {:4.2f} min".format(site, dt))
+        print("{:4s}  {:5.2f} min".format(site, dt))
     print()
-    print("mean  {:4.2f} +/- {:3.1f} min".format(mean, sigma))
+    print("mean  {:5.2f} +/- {:3.1f} min (95% {:5.2f} min)"
+          .format(mean, sigma, p95))
 
 
 # Main program
