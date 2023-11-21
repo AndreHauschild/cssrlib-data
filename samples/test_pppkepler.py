@@ -4,7 +4,8 @@
 static test for PPP (Kepler)
 """
 
-import argparse
+import sys
+import configparser
 from copy import deepcopy
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -31,16 +32,33 @@ def time2dt(t):
     return datetime(e[0], e[1], e[2], e[3], e[4], int(e[5]))
 
 
+"""
+config = configparser.ConfigParser()
+config['epoch'] = {'length': 1, 'stepsize': 1}
+config['files'] = {
+    'basedir': expanduser('~/Projects/PPP_Kepler/SIM_PHM'),
+    'orbits': '_sp3/a0_est_VAL_Hopfi_MEO_CLK_READ_30s.sp3'}
+
+with open('test_pppkepler.ini', 'w') as configfile:
+    config.write(configfile)
+
+sys.exit(1)
+"""
+
+config = configparser.ConfigParser()
+config.read('test_pppkepler.ini')
+
 # Base directory
 #
-bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
+#bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
+bdir = config['files']['basedir']
 
 # Start epoch and number of epochs
 #
 ep = [2010, 3, 22, 0, 0, 0]
 
-tLen = 1.0*3600  # Data arc length [sec]
-tStep = 1        # step size [-]
+tLen = int(config['epoch']['length'])*3600    # Data arc length [sec]
+tStep = int(config['epoch']['stepsize'])      # step size [-]
 nep = int(tLen//tStep)
 
 time = epoch2time(ep)
@@ -55,11 +73,13 @@ static = True
 #
 sites = ('AZOR', 'CANA', 'FALK', 'FUCI', 'JANM', 'KERG', 'KOUR', 'MADE', 'MARQ',
          'NOUM', 'OBER', 'PAPE', 'REUN', 'SVAL', 'TERA', 'TROL', 'ULAB', 'WALL')
+sites = ()
 
 # orbit and biases
 #
-#orbfile = bdir+'/_sp3/a0_sim_VAL_Hopfi_MEO_CLK_READ_30s.sp3.sp3man'
-orbfile = bdir+'/_sp3/a0_est_VAL_Hopfi_MEO_CLK_READ_30s.sp3'
+#orbfile = bdir+'/_sp3/a0_sim_VAL_Hopfi_MEO_CLK_READ_30s.sp3'
+#orbfile = bdir+'/_sp3/a0_est_VAL_Hopfi_MEO_CLK_READ_30s.sp3'
+orbfile = bdir+config['files']['orbit']
 bsxfile = None  # bdir+'/_bia/HARDWARE_DELAYS_Hopfi_OBER_100321.bsx'
 
 # Load code and phase biases from Bias-SINEX
