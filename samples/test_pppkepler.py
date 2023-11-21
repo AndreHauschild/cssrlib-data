@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
- static test for PPP (Kepler)
+static test for PPP (Kepler)
 """
+
+import argparse
 from copy import deepcopy
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -29,12 +31,17 @@ def time2dt(t):
     return datetime(e[0], e[1], e[2], e[3], e[4], int(e[5]))
 
 
+# Base directory
+#
+bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
+
 # Start epoch and number of epochs
 #
 ep = [2010, 3, 22, 0, 0, 0]
 
-tep = 10  # step size
-nep = int(1*3600//tep)
+tLen = 1.0*3600  # Data arc length [sec]
+tStep = 1        # step size [-]
+nep = int(tLen//tStep)
 
 time = epoch2time(ep)
 year = ep[0]
@@ -44,14 +51,31 @@ doy = int(time2doy(time))
 #
 static = True
 
-# Base directory
-#
-bdir = expanduser('~/Projects/PPP_Kepler/SIM_PHM')
-
-# Sites for process
+# Sites for processing
 #
 sites = ('AZOR', 'CANA', 'FALK', 'FUCI', 'JANM', 'KERG', 'KOUR', 'MADE', 'MARQ',
          'NOUM', 'OBER', 'PAPE', 'REUN', 'SVAL', 'TERA', 'TROL', 'ULAB', 'WALL')
+
+# orbit and biases
+#
+#orbfile = bdir+'/_sp3/a0_sim_VAL_Hopfi_MEO_CLK_READ_30s.sp3.sp3man'
+orbfile = bdir+'/_sp3/a0_est_VAL_Hopfi_MEO_CLK_READ_30s.sp3'
+bsxfile = None  # bdir+'/_bia/HARDWARE_DELAYS_Hopfi_OBER_100321.bsx'
+
+# Load code and phase biases from Bias-SINEX
+#
+bsx = biasdec()
+if bsxfile is None:
+    bsx = None
+else:
+    bsx.parse(bsxfile)
+
+# Load ANTEX data for satellites and stations
+#
+atxfile = bdir+'/_atx/PHASCENT1_igs08.atx_LEO_GAL_6COSMIC_sim'
+
+atx = atxdec()
+atx.readpcv(atxfile)
 
 # Load site positions
 #
@@ -107,11 +131,6 @@ for site in sites:
     logfile = splitext(basename(obsfile))[0]+'.log'
     pltfile = logfile.replace('.log', '.eps')
 
-    # orbit and biases
-    #
-    orbfile = bdir+'/_sp3/a0_sim_VAL_Hopfi_MEO_CLK_READ_30s.sp3.sp3man'
-    bsxfile = None  # bdir+'/_bia/HARDWARE_DELAYS_Hopfi_OBER_100321.bsx'
-
     # Define signals to be processed
     #
     gnss = "E"
@@ -136,21 +155,6 @@ for site in sites:
     #
     nav = orb.parse_sp3(orbfile, nav)
 
-    # Load code and phase biases from Bias-SINEX
-    #
-    bsx = biasdec()
-    if bsxfile is None:
-        bsx = None
-    else:
-        bsx.parse(bsxfile)
-
-    # Load ANTEX data for satellites and stations
-    #
-    atxfile = bdir+'/_atx/PHASCENT1_igs08.atx_LEO_GAL_6COSMIC_sim'
-
-    atx = atxdec()
-    atx.readpcv(atxfile)
-
     # Initialize data structures for results
     #
     t = np.zeros(nep)
@@ -158,6 +162,7 @@ for site in sites:
     sol = np.zeros((nep, 4))
     ztd = np.zeros((nep, 1))
     smode = np.zeros(nep, dtype=int)
+    nsat = np.zeros(nep, dtype=int)
 
     ion = np.ones((nep, gn.uGNSS.MAXSAT))*np.nan
     resc = np.ones((nep, gn.uGNSS.MAXSAT, nav.nf))*np.nan
@@ -183,7 +188,7 @@ for site in sites:
         nav.armode = 0
         nav.thresar = 2.0
 
-        nav.elmin = np.deg2rad(7.5)
+        nav.elmin = np.deg2rad(5.0)
         nav.cnr_min = 0
 
         # Match process noise of 20cm/2mm for EPOS simulations
@@ -264,7 +269,7 @@ for site in sites:
 
             # Skip epochs not fitting the step size
             #
-            if int(timediff(obs.t, t0)) % tep == 0:
+            if int(timediff(obs.t, t0)) % tStep == 0:
 
                 # Call PPP module with IGS products
                 #
@@ -281,6 +286,7 @@ for site in sites:
                 ztd[ne] = nav.xa[ppp.IT(nav.na)] \
                     if nav.smode == 4 else nav.x[ppp.IT(nav.na)]
                 smode[ne] = nav.smode
+                nsat[ne] = nav.ns
 
                 for sat in range(gn.uGNSS.MAXSAT):
                     ion[ne, sat] = nav.xa[ppp.II(sat+1, nav.na)] \
@@ -290,20 +296,20 @@ for site in sites:
                 resp[ne, :, :] = nav.resp
 
                 nav.fout.write("{} {:14.4f} {:14.4f} {:14.4f} "
-                               "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, "
-                               "mode {:1d}\n"
+                               "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f} "
+                               "mode {:1d} #sat {:2d}\n"
                                .format(time2str(obs.t),
                                        sol[0], sol[1], sol[2],
                                        enu[ne, 0], enu[ne, 1], enu[ne, 2],
-                                       err2D, smode[ne]))
+                                       err2D, smode[ne], nsat[ne]))
 
                 # Log to standard output
                 #
                 stdout.write('\r{} {} ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, '
-                             'mode {:1d}'
+                             'mode {:1d}, #sat {:2d}'
                              .format(site, time2str(obs.t),
                                      enu[ne, 0], enu[ne, 1], enu[ne, 2],
-                                     err2D, smode[ne]))
+                                     err2D, smode[ne], nsat[ne]))
 
                 # Increase epoch counter
                 #
@@ -363,7 +369,7 @@ for site in sites:
     lbl_t = ['East [m]', 'North [m]', 'Up [m]']
 
     for k in range(3):
-        plt.subplot(7, 1, k+1)
+        plt.subplot(5, 1, k+1)
         plt.plot_date(t[idx5], enu[idx5, k], 'y.')
         plt.plot_date(t[idx4], enu[idx4, k], 'g.')
 
@@ -372,7 +378,7 @@ for site in sites:
         plt.ylim([-ylim, ylim])
         plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
-    plt.subplot(7, 1, 4)
+    plt.subplot(5, 1, 4)
     plt.plot_date(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
     plt.plot_date(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
     plt.ylabel('ZTD [cm]')
@@ -380,6 +386,15 @@ for site in sites:
     plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
     plt.legend()
 
+    plt.subplot(5, 1, 5)
+    plt.plot_date(t[idx5], nsat[idx5], 'y.', markersize=8, label='float')
+    plt.plot_date(t[idx4], nsat[idx4], 'g.', markersize=8, label='fix')
+    plt.ylabel('No. of satellites [-]')
+    plt.grid()
+    plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
+    plt.legend()
+
+    """
     ion = np.where(ion == 0, np.nan, ion)
 
     plt.subplot(7, 1, 5)
@@ -404,6 +419,7 @@ for site in sites:
     plt.ylabel('Phase [cm]')
     plt.grid()
     plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
+    """
 
     plt.xlabel('Time [HH:MM]')
 
@@ -412,8 +428,8 @@ for site in sites:
 
 # Call the plotting and statisctics script
 #
-logfile = tmpfile.format('*')
-statfile = "statistics_{:02d}s.log".format(tep)
+logfile = basename(tmpfile).format('*').replace('.rnx', '.log')
+statfile = "statistics_{:02d}s.log".format(tStep)
 
 os.system('{}/plot_pppkepler.py "{}" > {}'
           .format(os.path.dirname(__file__), logfile, statfile))
