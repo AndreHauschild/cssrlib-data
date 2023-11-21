@@ -240,7 +240,7 @@ def main():
     for site, dt in sorted_data.items():
         print("{:4s}  {:5.2f} min".format(site, dt))
     print()
-    print("mean  {:5.2f} +/- {:3.1f} min (95% {:5.2f} min)"
+    print("mean  {:5.2f} +/- {:5.1f} min (95% {:5.2f} min)"
           .format(mean, sigma, p95))
 
 
