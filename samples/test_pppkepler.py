@@ -73,13 +73,13 @@ static = True
 #
 sites = ('AZOR', 'CANA', 'FALK', 'FUCI', 'JANM', 'KERG', 'KOUR', 'MADE', 'MARQ',
          'NOUM', 'OBER', 'PAPE', 'REUN', 'SVAL', 'TERA', 'TROL', 'ULAB', 'WALL')
-sites = ()
+#sites = ()
 
 # orbit and biases
 #
 #orbfile = bdir+'/_sp3/a0_sim_VAL_Hopfi_MEO_CLK_READ_30s.sp3'
 #orbfile = bdir+'/_sp3/a0_est_VAL_Hopfi_MEO_CLK_READ_30s.sp3'
-orbfile = bdir+config['files']['orbit']
+orbfile = bdir+'/'+config['files']['orbit']
 bsxfile = None  # bdir+'/_bia/HARDWARE_DELAYS_Hopfi_OBER_100321.bsx'
 
 # Load code and phase biases from Bias-SINEX
@@ -209,6 +209,7 @@ for site in sites:
         nav.thresar = 2.0
 
         nav.elmin = np.deg2rad(5.0)
+        #nav.elmin = np.deg2rad(7.5)
         nav.cnr_min = 0
 
         # Match process noise of 20cm/2mm for EPOS simulations
