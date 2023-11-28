@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import numpy as np
 import os
-from os.path import basename, expanduser, splitext
+from os.path import basename, splitext
 from sys import stdout
 
 import cssrlib.gnss as gn
@@ -208,8 +208,8 @@ for site in sites:
         nav.armode = 0
         nav.thresar = 2.0
 
-        nav.elmin = np.deg2rad(5.0)
-        #nav.elmin = np.deg2rad(7.5)
+        #nav.elmin = np.deg2rad(5.0)
+        nav.elmin = np.deg2rad(7.5)
         nav.cnr_min = 0
 
         # Match process noise of 20cm/2mm for EPOS simulations
