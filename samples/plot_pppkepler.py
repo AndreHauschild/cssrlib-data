@@ -173,9 +173,9 @@ def main():
 
         fmt = '%H:%M'
 
-        ylim = 0.5
-        tmaj = 0.1
-        tmin = 0.05
+        ylim = 0.20
+        tmaj = 0.05
+        tmin = 0.01
         legend = ['East', 'North', 'Up']
 
         plt.subplot(2, 1, 1)
@@ -200,9 +200,9 @@ def main():
         if len(t[idx4]) > 0 and len(t[idx5]) > 0:
             plt.legend()
 
-        ylim = ylim/2
-        tmaj = tmaj/2
-        tmin = tmin/2
+        #ylim = ylim/2
+        #tmaj = tmaj/2
+        #tmin = tmin/2
 
         plt.ylabel("Position Error 2D [m]")
         plt.grid()
