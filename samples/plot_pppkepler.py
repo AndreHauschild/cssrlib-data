@@ -243,6 +243,11 @@ def main():
     print("mean  {:5.2f} +/- {:5.1f} min (95% {:5.2f} min)"
           .format(mean, sigma, p95))
 
+    import os
+    for site in ("OBER", "REUN"):
+        os.system(
+            'epspdf GNSSDATA_i0_sim_VAL_Hopfi_MEO_CLK_READ_1s_{}_2D.eps'.format(site))
+
 
 # Main program
 #
