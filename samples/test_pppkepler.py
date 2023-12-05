@@ -215,6 +215,7 @@ for site in sites:
         # Match process noise of 20cm/2mm for EPOS simulations
         #
         nav.err = [0, 0.000, 0.002]       # [m] sigma
+        # nav.err = [0, 0.002, 0.000]       # [m] sigma
 
         # Zero process noise for fixed-position model
         #
