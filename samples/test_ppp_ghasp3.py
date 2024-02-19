@@ -156,7 +156,7 @@ if rnx.decode_obsh(obsfile) >= 0:
     #
     ppp = pppos(nav, rnx.pos, outFileName)
     nav.ephopt = 4  # IGS
-    nav.armode = 0
+    nav.armode = 0  # 0: no ambiguity fixing, 3: ambiguity fixing
 
     nav.elmin = np.deg2rad(10.0)
     nav.thresar = 2.0
