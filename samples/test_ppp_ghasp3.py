@@ -161,7 +161,7 @@ if rnx.decode_obsh(obsfile) >= 0:
     nav.elmin = np.deg2rad(10.0)
     nav.thresar = 2.0
 
-    # Use Hopfield tropo model
+    # Select tropo model
     #
     #nav.trpModel = uTropoModel.HOPF
     nav.trpModel = uTropoModel.NONE
