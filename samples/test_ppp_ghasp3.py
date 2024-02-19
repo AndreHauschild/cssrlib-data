@@ -31,7 +31,6 @@ doy = int(time2doy(time))
 
 # Reference position
 #
-#xyz_ref = [4091423.1727, 368380.9091, 4863180.0711]
 xyz_ref = [4091423.0991, 368380.9025, 4863179.9830]
 pos_ref = ecef2pos(xyz_ref)
 
@@ -136,6 +135,10 @@ nav.monlevel = 0
 outFileName = 'test_ppp_ghasp3.log'
 plotFileName = outFileName.replace('.log', '')
 
+# Static or kinematic position model
+#
+static = True
+
 # Load RINEX OBS file header
 #
 if rnx.decode_obsh(obsfile) >= 0:
@@ -156,10 +159,15 @@ if rnx.decode_obsh(obsfile) >= 0:
     #
     ppp = pppos(nav, rnx.pos, outFileName)
     nav.ephopt = 4  # IGS
-    nav.armode = 0  # 0: no ambiguity fixing, 3: ambiguity fixing
+    nav.armode = 3  # 0: no ambiguity fixing, 3: ambiguity fixing
 
     nav.elmin = np.deg2rad(10.0)
     nav.thresar = 2.0
+
+    # Zero process noise for fixed-position model
+    #
+    if static:
+        nav.q[0:3] = 0.0
 
     # Select tropo model
     #
