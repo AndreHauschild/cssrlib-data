@@ -23,33 +23,41 @@ from cssrlib.rinex import rnxdec
 # Start epoch and number of epochs
 #
 ep = [2023, 7, 1, 0, 0, 0]
-xyz_ref = [4091423.1727, 368380.9091, 4863180.0711]
+nep = 120
 
 time = epoch2time(ep)
 year = ep[0]
 doy = int(time2doy(time))
 
-nep = 120
-
+# Reference position
+#
+#xyz_ref = [4091423.1727, 368380.9091, 4863180.0711]
+xyz_ref = [4091423.0991, 368380.9025, 4863179.9830]
 pos_ref = ecef2pos(xyz_ref)
 
-obsfile = '~/Projects/PPP_GHASP/REDU00BEL_S_20231820000_01D_30S_MO.rnx'
+# Observation file
+#
+obsfile = '~/Projects/groops/scenarioGnssSimulationGhasp/output/{:4d}-{:02d}-{:02d}/rinex//REDU00BEL_S_{:4d}{:03d}0000_01D_30S_MO.rnx'\
+    .format(ep[0], ep[1], ep[2], year, doy)
 obsfile = expanduser(obsfile)
 
+# Orbit, clock offset and signal bias files
+#
 ac = 'COD0MGXFIN'
 
 orbfile = '~/GNSS_DAT/{}/{:4d}/{}_{:4d}{:03d}0000_01D_05M_ORB.SP3'\
     .format(ac, year, ac, year, doy)
-orbfile = expanduser(orbfile)
 
 clkfile = '~/GNSS_DAT/{}/{:4d}/{}_{:4d}{:03d}0000_01D_30S_CLK.CLK'\
     .format(ac, year, ac, year, doy)
-clkfile = expanduser(clkfile)
 
-"""
-bsxfile = '/home/andre/GNSS_DAT/{}/{:4d}/{}_{:4d}{:03d}0000_01D_01D_OSB.BIA'\
+bsxfile = '~/GNSS_DAT/{}/{:4d}/{}_{:4d}{:03d}0000_01D_01D_OSB.BIA'\
     .format(ac, year, ac, year, doy)
-"""
+
+orbfile = expanduser(orbfile)
+clkfile = expanduser(clkfile)
+bsxfile = expanduser(bsxfile)
+
 bsxfile = None
 
 if not exists(orbfile):
@@ -105,8 +113,11 @@ elif time > epoch2time([2021, 5, 2, 0, 0, 0]):
 else:
     atxfile = '../data/M14.ATX' if 'COD0MGXFIN' in ac else '../data/igs14.atx'
 
+atxfile = None
+
 atx = atxdec()
-atx.readpcv(atxfile)
+if atxfile is not None:
+    atx.readpcv(atxfile)
 
 # Intialize data structures for results
 #
@@ -118,21 +129,24 @@ smode = np.zeros(nep, dtype=int)
 
 # Logging level
 #
-nav.monlevel = 1  # TODO: enabled for testing!
+nav.monlevel = 0
+
+# Output and plot file
+#
+outFileName = 'test_ppp_ghasp3.log'
+plotFileName = outFileName.replace('.log', '')
 
 # Load RINEX OBS file header
 #
 if rnx.decode_obsh(obsfile) >= 0:
 
-    """
-    # Reference position and eccentricity
+    # Update reference position with eccentricity
     #
     ecc_ref = rnx.ecc
     pos_ref = ecef2pos(xyz_ref)
     xyz_ref = xyz_ref + enu2xyz(pos_ref)@ecc_ref
 
     pos_ref = ecef2pos(xyz_ref)
-    """
 
     # Auto-substitute signals
     #
@@ -140,9 +154,9 @@ if rnx.decode_obsh(obsfile) >= 0:
 
     # Initialize position
     #
-    ppp = pppos(nav, rnx.pos, 'test_pppigs.log')
+    ppp = pppos(nav, rnx.pos, outFileName)
     nav.ephopt = 4  # IGS
-    nav.armode = 3
+    nav.armode = 0
 
     nav.elmin = np.deg2rad(10.0)
     nav.thresar = 2.0
@@ -154,8 +168,10 @@ if rnx.decode_obsh(obsfile) >= 0:
 
     # Do not use antenna corrections or biases
     #
-    nav.useRxPco = False
-    nav.useTxPco = False
+    if atxfile is None:
+        nav.useRxPco = False
+        nav.useTxPco = False
+
     if bsx is None:
         nav.useBiases = None
 
@@ -324,7 +340,7 @@ elif fig_type == 2:
     # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
 
 plotFileFormat = 'eps'
-plotFileName = '.'.join(('test_pppigs', plotFileFormat))
+plotFileName = '.'.join((plotFileName, plotFileFormat))
 
 plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight', dpi=300)
 # plt.show()
