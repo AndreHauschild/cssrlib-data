@@ -137,7 +137,8 @@ plotFileName = outFileName.replace('.log', '')
 
 # Static or kinematic position model
 #
-static = True
+#static = True
+static = False
 
 # Load RINEX OBS file header
 #
