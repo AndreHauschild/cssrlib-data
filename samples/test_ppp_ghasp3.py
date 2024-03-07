@@ -23,7 +23,8 @@ from cssrlib.rinex import rnxdec
 # Start epoch and number of epochs
 #
 ep = [2023, 7, 1, 0, 0, 0]
-nep = 120
+dt = 3 * 3600
+nep = int(dt/30)
 
 time = epoch2time(ep)
 year = ep[0]
@@ -55,8 +56,7 @@ bsxfile = '~/GNSS_DAT/{}/{:4d}/{}_{:4d}{:03d}0000_01D_01D_OSB.BIA'\
 
 orbfile = expanduser(orbfile)
 clkfile = expanduser(clkfile)
-bsxfile = expanduser(bsxfile)
-
+#bsxfile = expanduser(bsxfile)
 bsxfile = None
 
 if not exists(orbfile):
@@ -105,13 +105,14 @@ else:
 
 # Load ANTEX data for satellites and stations
 #
+"""
 if time > epoch2time([2022, 11, 27, 0, 0, 0]):
     atxfile = '../data/I20.ATX' if 'COD0MGXFIN' in ac else '../data/igs20.atx'
 elif time > epoch2time([2021, 5, 2, 0, 0, 0]):
     atxfile = '../data/M20.ATX' if 'COD0MGXFIN' in ac else '../data/igs14.atx'
 else:
     atxfile = '../data/M14.ATX' if 'COD0MGXFIN' in ac else '../data/igs14.atx'
-
+"""
 atxfile = None
 
 atx = atxdec()
@@ -160,7 +161,7 @@ if rnx.decode_obsh(obsfile) >= 0:
     #
     ppp = pppos(nav, rnx.pos, outFileName)
     nav.ephopt = 4  # IGS
-    nav.armode = 3  # 0: no ambiguity fixing, 3: ambiguity fixing
+    nav.armode = 0  # 0: no ambiguity fixing, 3: ambiguity fixing
 
     nav.elmin = np.deg2rad(10.0)
     nav.thresar = 2.0
@@ -296,7 +297,7 @@ if rnx.decode_obsh(obsfile) >= 0:
         nav.fout.close()
 
 fig_type = 1
-ylim = 1.0
+ylim = 0.2
 
 idx4 = np.where(smode == 4)[0]
 idx5 = np.where(smode == 5)[0]
