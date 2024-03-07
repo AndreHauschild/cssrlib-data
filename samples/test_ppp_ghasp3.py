@@ -56,7 +56,8 @@ bsxfile = '~/GNSS_DAT/{}/{:4d}/{}_{:4d}{:03d}0000_01D_01D_OSB.BIA'\
 
 orbfile = expanduser(orbfile)
 clkfile = expanduser(clkfile)
-#bsxfile = expanduser(bsxfile)
+bsxfile = expanduser(bsxfile)
+
 bsxfile = None
 
 if not exists(orbfile):
@@ -93,7 +94,8 @@ nav.pmode = 0
 # Load precise orbits and clock offsets
 #
 nav = orb.parse_sp3(orbfile, nav)
-nav = rnx.decode_clk(clkfile, nav)
+if clkfile is not None:
+    nav = rnx.decode_clk(clkfile, nav)
 
 # Load code and phase biases from Bias-SINEX
 #
