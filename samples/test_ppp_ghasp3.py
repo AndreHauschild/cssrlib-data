@@ -163,7 +163,7 @@ if rnx.decode_obsh(obsfile) >= 0:
     #
     ppp = pppos(nav, rnx.pos, outFileName)
     nav.ephopt = 4  # IGS
-    nav.armode = 0  # 0: no ambiguity fixing, 3: ambiguity fixing
+    nav.armode = 3  # 0: no ambiguity fixing, 3: ambiguity fixing
 
     nav.elmin = np.deg2rad(10.0)
     nav.thresar = 2.0
@@ -175,8 +175,8 @@ if rnx.decode_obsh(obsfile) >= 0:
 
     # Select tropo model
     #
-    #nav.trpModel = uTropoModel.HOPF
-    nav.trpModel = uTropoModel.NONE
+    nav.trpModel = uTropoModel.HOPF
+    #nav.trpModel = uTropoModel.NONE
 
     # Do not use antenna corrections or biases
     #
