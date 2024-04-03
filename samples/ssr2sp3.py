@@ -453,6 +453,24 @@ for ne in range(nep):
                 else:
                     biases[sat_][sig_][-1][1] = time
 
+                # Add additional biases for QZSS CLAS
+                #
+                if cs.cssrmode == sc.QZS_MADOCA:
+
+                    if rSigRnx('EC1X') == sig_:
+                        sig_ = rSigRnx('EC1C')
+                    elif rSigRnx('EC5X') == sig_:
+                        sig_ = rSigRnx('EC5Q')
+
+                    if sig_ not in biases[sat_].keys():
+                        biases[sat_].update({sig_: []})
+
+                    if len(biases[sat_][sig_]) == 0 or \
+                            biases[sat_][sig_][-1][2] != val_:
+                        biases[sat_][sig_].append([time, time, val_])
+                    else:
+                        biases[sat_][sig_][-1][1] = time
+
         # Get SSR phase biases
         #
         for sat_, dat_ in cs.lc[0].pbias.items():
@@ -474,6 +492,46 @@ for ne in range(nep):
                     biases[sat_][sig_].append([time, time, val_])
                 else:
                     biases[sat_][sig_][-1][1] = time
+
+                # Add additional biases for QZSS CLAS
+                #
+                if cs.cssrmode == sc.QZS_MADOCA:
+
+                    if rSigRnx('EL1X') == sig_:
+                        sig_ = rSigRnx('EL1C')
+                    elif rSigRnx('EL5X') == sig_:
+                        sig_ = rSigRnx('EL5Q')
+
+                    if sig_ not in biases[sat_].keys():
+                        biases[sat_].update({sig_: []})
+
+                    if len(biases[sat_][sig_]) == 0 or \
+                            biases[sat_][sig_][-1][2] != val_:
+                        biases[sat_][sig_].append([time, time, val_])
+                    else:
+                        biases[sat_][sig_][-1][1] = time
+
+        # Fake GPS code biases for Beidou B2b-PPP
+        #
+        if cs.cssrmode == sc.BDS_PPP:
+
+            for sat_ in range(1, 33):
+
+                sigs = [rSigRnx('GC1C'), rSigRnx('GC2W')]
+                for sig_ in sigs:
+
+                    val_ = 0.0
+
+                    if sat_ not in biases.keys():
+                        biases.update({sat_: {}})
+                    if sig_ not in biases[sat_].keys():
+                        biases[sat_].update({sig_: []})
+
+                    if len(biases[sat_][sig_]) == 0 or \
+                            biases[sat_][sig_][-1][2] != val_:
+                        biases[sat_][sig_].append([time, time, val_])
+                    else:
+                        biases[sat_][sig_][-1][1] = time
 
     # Next time-step
     #
