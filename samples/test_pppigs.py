@@ -21,7 +21,7 @@ from cssrlib.rinex import rnxdec
 
 # Start epoch and number of epochs
 #
-dataset = 2  # 0: SEPT078M.21O, 1: SEPT1890.23O, 2: SEPT223Y.23O
+dataset = 0  # 0: SEPT078M.21O, 1: SEPT1890.23O, 2: SEPT223Y.23O
 
 if dataset == 0:  # SETP078M.21O
     ep = [2021, 3, 19, 12, 0, 0]
@@ -43,7 +43,7 @@ time = epoch2time(ep)
 year = ep[0]
 doy = int(time2doy(time))
 
-nep = 900*2
+nep = 5*60  # 900*2
 
 pos_ref = ecef2pos(xyz_ref)
 
@@ -135,11 +135,17 @@ t = np.zeros(nep)
 enu = np.ones((nep, 3))*np.nan
 sol = np.zeros((nep, 4))
 ztd = np.zeros((nep, 1))
+ion = np.zeros((nep, gn.uGNSS.MAXSAT))
 smode = np.zeros(nep, dtype=int)
+
+varenu = np.ones((nep, 3))*np.nan
+varztd = np.zeros((nep, 1))
+varion = np.zeros((nep, gn.uGNSS.MAXSAT))
+
 
 # Logging level
 #
-nav.monlevel = 1  # TODO: enabled for testing!
+nav.monlevel = 2  # TODO: enabled for testing!
 
 # Load RINEX OBS file header
 #
@@ -237,14 +243,32 @@ if rnx.decode_obsh(obsfile) >= 0:
 
         ztd[ne] = nav.xa[ppp.IT(nav.na)] \
             if nav.smode == 4 else nav.x[ppp.IT(nav.na)]
+        ion[ne] = nav.xa[nav.na-gn.uGNSS.MAXSAT:nav.na] \
+            if nav.smode == 4 else nav.x[nav.na-gn.uGNSS.MAXSAT:nav.na]
+
         smode[ne] = nav.smode
 
+        E = gn.xyz2enu(pos_ref)
+
+        varxyz = nav.Pa[0:3, 0:3] if nav.smode == 4 else nav.P[0:3, 0:3]
+        varenu[ne] = np.diag(E@varxyz@E.T)
+
+        varztd[ne] = nav.Pa[ppp.IT(nav.na), ppp.IT(nav.na)] \
+            if nav.smode == 4 else nav.P[ppp.IT(nav.na), ppp.IT(nav.na)]
+
+        varion[ne] = np.diag(nav.Pa)[nav.na-gn.uGNSS.MAXSAT:nav.na] \
+            if nav.smode == 4 else np.diag(nav.P)[nav.na-gn.uGNSS.MAXSAT:nav.na]
+
         nav.fout.write("{} {:14.4f} {:14.4f} {:14.4f} "
-                       "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, mode {:1d}\n"
+                       "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, "
+                       "SIG {:7.3f} {:7.3f} {:7.3f}, mode {:1d}\n"
                        .format(time2str(obs.t),
                                sol[0], sol[1], sol[2],
                                enu[ne, 0], enu[ne, 1], enu[ne, 2],
                                np.sqrt(enu[ne, 0]**2+enu[ne, 1]**2),
+                               np.sqrt(varenu[ne, 0]),
+                               np.sqrt(varenu[ne, 1]),
+                               np.sqrt(varenu[ne, 2]),
                                smode[ne]))
 
         # Log to standard output
@@ -291,26 +315,43 @@ if fig_type == 1:
     lbl_t = ['East [m]', 'North [m]', 'Up [m]']
 
     for k in range(3):
-        plt.subplot(4, 1, k+1)
+        plt.subplot(5, 1, k+1)
         plt.plot(t[idx0], enu[idx0, k], 'r.')
         plt.plot(t[idx5], enu[idx5, k], 'y.')
         plt.plot(t[idx4], enu[idx4, k], 'g.')
+
+        plt.plot(t, np.sqrt(varenu[:, k]), 'k-')
 
         plt.ylabel(lbl_t[k])
         plt.grid()
         plt.ylim([-ylim, ylim])
         plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
 
-    plt.subplot(4, 1, 4)
+    plt.subplot(5, 1, 4)
     plt.plot(t[idx0], ztd[idx0]*1e2, 'r.', markersize=8, label='none')
     plt.plot(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
     plt.plot(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
+    plt.plot(t, np.sqrt(varztd)*1e2, 'k-', markersize=8)
+
     plt.ylabel('ZTD [cm]')
     plt.grid()
     plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
+    plt.legend()
+
+    plt.subplot(5, 1, 5)
+    for i in range(gn.uGNSS.MAXSAT):
+        idx = np.nonzero(ion[:, i])[0]
+        if idx.size:
+            print(varion[:, i])
+            plt.plot(t[idx], ion[idx, i], '.', markersize=8)
+            plt.plot(t[idx], np.sqrt(varion[idx, i]), 'k-', markersize=8)
+    plt.ylabel('Slant Iono [m]')
+    plt.grid()
+    plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
+    # plt.legend()
 
     plt.xlabel('Time [HH:MM]')
-    plt.legend()
+
 
 elif fig_type == 2:
 
