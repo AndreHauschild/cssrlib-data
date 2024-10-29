@@ -8,7 +8,6 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import numpy as np
-from os.path import expanduser
 import sys
 from sys import stdout
 
