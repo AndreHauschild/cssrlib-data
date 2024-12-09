@@ -619,6 +619,11 @@ class sbf(rcvDec):
             crcpass, cnt, src, freq, ch = st.unpack_from('<BBBBB', buff, k)
             k += 5
             if self.flg_galfnav:
+                if src & 0x1f == 20:  # E5a
+                    type_ = 1
+                else:
+                    return -1
+
                 if crcpass != 1:
                     if self.monlevel > 0:
                         print("crc error in GALRawFNAV " +
@@ -629,7 +634,7 @@ class sbf(rcvDec):
 
                 self.fh_galfnav.write("{:4d}\t{:6.1f}\t{:3d}\t{:1d}\t{:3d}\t".
                                       format(self.week, self.tow,
-                                             prn, src, 32))
+                                             prn, type_, 32))
                 msg = bytearray(32)
                 for i in range(8):
                     d = st.unpack_from('<L', buff, k)[0]
@@ -640,7 +645,8 @@ class sbf(rcvDec):
 
                 self.fh_galfnav.write("\n")
 
-                eph = self.rn.decode_gal_fnav(self.week, self.tow, sat, 1, msg)
+                eph = self.rn.decode_gal_fnav(self.week, self.tow, sat, type_,
+                                              msg)
                 if eph is not None:
                     self.re.rnx_nav_body(eph, self.fh_rnxnav)
 
@@ -651,6 +657,13 @@ class sbf(rcvDec):
             crcpass, cnt, src, freq, ch = st.unpack_from('<BBBBB', buff, k)
             k += 5
             if self.flg_galinav:
+                if src & 0x1f == 17:  # E1B
+                    type_ = 0
+                elif src & 0x1f == 21:  # E5b
+                    type_ = 2
+                else:
+                    return -1
+
                 if crcpass != 1:
                     if self.monlevel > 0:
                         print("crc error in GALRawINAV " +
@@ -661,18 +674,17 @@ class sbf(rcvDec):
 
                 self.fh_galinav.write("{:4d}\t{:6.1f}\t{:3d}\t{:1d}\t{:3d}\t".
                                       format(self.week, self.tow, prn,
-                                             src, 32))
+                                             type_, 32))
                 msg = bytearray(32)
                 for i in range(8):
                     d = st.unpack_from('<L', buff, k)[0]
-                    self.fh_galinav.write("{:08x}".format(d))
                     st.pack_into('>L', msg, i*4, d)
                     k += 4
-                self.fh_galinav.write("\n")
 
                 # GALRawINAV is missing tail bit (6) of even page
+                # add 6 bits offset for odd page
                 msg_ = bytearray(30)
-                msg_[0:15] = msg[0:15]
+                msg_[0:15] = msg[0:15]  # even page
                 k = 114
                 for i in range(15):
                     d = bs.unpack_from('u8', bytes(msg), k)[0]
@@ -680,8 +692,12 @@ class sbf(rcvDec):
                     k += 8
                 msg_ = bytes(msg_)
 
+                for i in range(30):
+                    self.fh_galinav.write("{:08x}".format(msg_[i]))
+                self.fh_galinav.write("\n")
+
                 eph = self.rn.decode_gal_inav(self.week, self.tow,
-                                              sat, 2, msg_)
+                                              sat, type_, msg_)
                 if self.mode_galinav == 0 and eph is not None:
                     self.re.rnx_nav_body(eph, self.fh_rnxnav)
 
@@ -691,6 +707,11 @@ class sbf(rcvDec):
             crcpass, cnt, src, freq, ch = st.unpack_from('<BBBBB', buff, k)
             k += 5
             if self.flg_gale6:
+                if src & 0x1f == 19:
+                    type_ = 6
+                else:
+                    return -1
+
                 if crcpass != 1:
                     if self.monlevel > 0:
                         print("crc error in GALRawCNAV " +
