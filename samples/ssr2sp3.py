@@ -7,7 +7,9 @@ import bitstruct as bs
 from itertools import chain
 import numpy as np
 import os
-import sys
+from sys import argv as sys_argv
+from sys import exit as sys_exit
+
 
 from cssrlib.ephemeris import satpos
 from cssrlib.gnss import Nav, sat2prn, sys2str, sat2id
@@ -112,8 +114,8 @@ baseDirName = os.path.dirname(os.path.abspath(__file__))+"/"
 # SSR file for conversion
 #
 ssrfiles = []
-if len(sys.argv) > 1:
-    ssrfiles = sys.argv[1:]
+if len(sys_argv) > 1:
+    ssrfiles = sys_argv[1:]
 else:
     ssrfiles = ['../data/gale6_189e.txt', ]
 
@@ -125,7 +127,7 @@ else:
     time = file2time(2023, ssrfiles[0])
     """
     print("ERROR: unknown epoch!")
-    sys.exit(1)
+    sys_exit(1)
     """
 
 ep = time2epoch(time)
@@ -171,7 +173,7 @@ elif "bdsb2b" in ssrfiles[0]:
 else:
 
     print("ERROR: unknown SSR format for {}!".format(ssrfiles[0]))
-    sys.exit(1)
+    sys_exit(1)
 
 # Output files
 #
@@ -223,7 +225,7 @@ elif "bdsb2b" in ssrfiles[0]:
     cs = cssr_bds()
 else:
     print("ERROR: unknown SSR format for {}!".format(ssrfiles[0]))
-    sys.exit(1)
+    sys_exit(1)
 
 cs.monlevel = 0
 
