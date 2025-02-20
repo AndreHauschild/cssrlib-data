@@ -117,7 +117,7 @@ ssrfiles = []
 if len(sys_argv) > 1:
     ssrfiles = sys_argv[1:]
 else:
-    ssrfiles = ['../data/gale6_189e.txt', ]
+    ssrfiles = ['../data/doy2023-189/gale6_189e.txt', ]
 
 # Start time
 #
@@ -199,8 +199,8 @@ for dt in (-1, 0, +1):
     hour = ep[3]
     doy = int(time2doy(t))
 
-    navfile = baseDirName+'../data{}/BRD400DLR_S_{:4d}{:03d}0000_01D_MN.rnx'\
-        .format('/doy223' if doy == 223 else '', year, doy)
+    navfile = baseDirName+'../data/doy{:4d}-{:03d}/BRD400DLR_S_{:4d}{:03d}0000_01D_MN.rnx'\
+        .format(year, doy, year, doy)
 
     if os.path.exists(navfile):
         navfiles.append(navfile)
