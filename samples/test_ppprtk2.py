@@ -15,7 +15,7 @@ from cssrlib.peph import atxdec, searchpcv
 ep = [2021, 9, 22, 6, 30, 0]
 time = gn.epoch2time(ep)
 
-atxfile = '../data/igs14.atx'
+atxfile = '../data/antex/igs14.atx'
 navfile = '../data/SEPT2650.21P'
 obsfile = '../data/SEPT265G.21O'
 l6file = '../data/2021265G.l6'

@@ -99,9 +99,9 @@ cs.monlevel = 2
 #
 
 if time > epoch2time([2022, 11, 27, 0, 0, 0]):
-    atxfile = '../data/igs20.atx'
+    atxfile = '../data/antex/igs20.atx'
 else:
-    atxfile = '../data/igs14.atx'
+    atxfile = '../data/antex/igs14.atx'
 
 atx = atxdec()
 atx.readpcv(atxfile)

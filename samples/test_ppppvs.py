@@ -96,7 +96,7 @@ cs.monlevel = 2
 # Load ANTEX data for satellites and stations
 #
 atx = atxdec()
-atx.readpcv('../data/igs20.atx')
+atx.readpcv('../data/antex/igs20.atx')
 
 # Initialize data structures for results
 #

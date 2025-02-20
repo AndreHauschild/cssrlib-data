@@ -143,7 +143,7 @@ if "qzsl6" in ssrfiles[0]:
 
     prn_ref = 199  # QZSS PRN
     l6_ch = 1  # 0:L6D, 1:L6E
-    atxfile = baseDirName+'../data/igs20.atx'
+    atxfile = baseDirName+'../data/antex/igs20.atx'
 
 elif "gale6" in ssrfiles[0]:
 
@@ -155,7 +155,7 @@ elif "gale6" in ssrfiles[0]:
 
     # NOTE: igs14 values seem to be yield better consistency with
     #       CODE reference orbits
-    atxfile = baseDirName+'../data/igs14.atx'
+    atxfile = baseDirName+'../data/antex/igs14.atx'
 
 elif "bdsb2b" in ssrfiles[0]:
 
@@ -166,7 +166,7 @@ elif "bdsb2b" in ssrfiles[0]:
              ('type', 'int'), ('len', 'int'), ('nav', 'S124')]
 
     prn_ref = 59  # satellite PRN to receive BDS PPP collection
-    atxfile = baseDirName+'../data/igs20.atx'
+    atxfile = baseDirName+'../data/antex/igs20.atx'
 
 else:
 

@@ -116,7 +116,7 @@ gMat = np.genfromtxt(file_gm, dtype="u1", delimiter=",")
 
 # Load ANTEX data for satellites and stations
 #
-atxfile = '../data/igs14.atx'
+atxfile = '../data/antex/igs14.atx'
 atx = atxdec()
 atx.readpcv(atxfile)
 

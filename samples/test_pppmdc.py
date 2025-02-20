@@ -65,8 +65,8 @@ pos_ref = ecef2pos(xyz_ref)
 
 # Define signals to be processed
 #
-# gnss = "GE"
-gnss = "GEJR"
+gnss = "GE"
+#gnss = "GEJR"
 sigs = []
 if 'G' in gnss:
     sigs.extend([rSigRnx("GC1C"), rSigRnx("GC2W"),
@@ -110,11 +110,11 @@ cs.cssrmode = sc.QZS_MADOCA
 
 # Load ANTEX data for satellites and stations
 #
-
+atxfile = '../data/antex/'
 if time > epoch2time([2022, 11, 27, 0, 0, 0]):
-    atxfile = '../data/igs20.atx'
+    atxfile += 'igs20.atx'
 else:
-    atxfile = '../data/igs14.atx'
+    atxfile += 'igs14.atx'
 
 atx = atxdec()
 atx.readpcv(atxfile)
