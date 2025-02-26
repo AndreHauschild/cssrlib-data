@@ -32,7 +32,7 @@ Activate the environment with
 source cssrlib-venv/bin/activate
 ```
 
-To make the base **CSSRlib** module availabe in the virtual environment, there are several options:
+To make the base **CSSRlib** module available in the virtual environment, there are several options:
 
 ***1. Install the official package***
 
@@ -66,14 +66,7 @@ cssrlib-data
 cssrlib-venv
 ```
 
-Install the dependencies from the `requirements.txt` file of `cssrlib`:
-
-```bash
-pip install -r cssrlib/requirements.txt
-```
-
 Install the local module in editing mode using the `-e` flag:
-
 
 ```bash
 pip install -e ./cssrlib
@@ -81,7 +74,7 @@ pip install -e ./cssrlib
 
 ***4. Make a local copy available without installation***
 
-*NOTE:* this is not necessry if the `cssrlib` package has been installed with `pip` through one of the steps above!
+*NOTE:* this is not necessary if the `cssrlib` package has been installed with `pip` through one of the steps above!
 
 Make sure the path to the `src` folder of the `cssrlib` base repository appears in the python path.
 
@@ -115,6 +108,15 @@ Install the dependencies from the `requirements.txt` file of `cssrlib-data`:
 
 ```bash
 pip install -r cssrlib-data/requirements.txt
+```
+
+## Data download from IGS
+
+Most sample scripts require IGS data for processing. The data can be downloaded with a script, which must be called before the scripts can be executed:
+
+```bash
+cd ./cssrlib-data/samples
+python3 igs_download.py
 ```
 
 ## Handling Warnings from the PySolid module

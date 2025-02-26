@@ -21,7 +21,7 @@ from cssrlib.rinex import rnxdec
 
 # Start epoch and number of epochs
 #
-dataset = 3  # 0: SEPT078M.21O, 1: SEPT1890.23O, 2: SEPT223Y.23O
+dataset = 3
 
 if dataset == 0:  # SETP078M.21O
     ep = [2021, 3, 19, 12, 0, 0]
@@ -32,8 +32,8 @@ elif dataset == 1:  # SETP1890.23O
 elif dataset == 2:  # SETP223Z.23O
     ep = [2023, 8, 11, 21, 0, 0]
     xyz_ref = [-3962108.7063, 3381309.5703, 3668678.6690]
-elif dataset == 3:  # 046m_rnx.obs
-    ep = [2025, 2, 15, 12, 0, 0]
+elif dataset == 3:  # 046r_rnx.obs
+    ep = [2025, 2, 15, 17, 0, 0]
     xyz_ref = [-3962108.6819, 3381309.5707, 3668678.6750]
 else:
     print("ERROR: no RINEX data set selected!")
@@ -59,7 +59,8 @@ if dataset == 1:
     obsfile = bdir+'SEPT{:03d}{}.{:02d}O'.format(doy, let, year % 2000)
 elif dataset == 2:
     let = 'Z'
-    navfile = bdir+'BRD400DLR_S_{:04d}{:03d}0000_01D_MN.rnx'.format(year, doy)
+    navfile = '../data/brdc/' + \
+        'BRD400DLR_S_{:04d}{:03d}0000_01D_MN.rnx'.format(year, doy)
     obsfile = bdir+'SEPT{:03d}{}.{:02d}O'.format(doy, let, year % 2000)
 else:
     let = chr(ord('a')+ep[3])

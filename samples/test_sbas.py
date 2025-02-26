@@ -1,5 +1,5 @@
 """
- static test for PPP (PVS PPP)
+ static test for SBAS (L1 or DFMC)
 """
 from binascii import unhexlify
 from copy import deepcopy
@@ -26,19 +26,19 @@ dataset = 1
 #
 if dataset == 0:  # MSAS, L1 SBAS
     ep = [2023, 8, 11, 21, 0, 0]
-    navfile = '../data/doy223/BRD400DLR_S_20232230000_01D_MN.rnx'
-    obsfile = '../data/doy223/SEPT223Y.23O'  # PolaRX5
-    file_sbas = '../data/doy223/223v_sbas.txt'
+    navfile = '../data/brdc/BRD400DLR_S_20232230000_01D_MN.rnx'
+    obsfile = '../data/2023-doy223/SEPT223Y.23O'  # PolaRX5
+    file_sbas = '../data/2023-doy223/223v_sbas.txt'
     xyz_ref = [-3962108.6726, 3381309.4719, 3668678.6264]
     prn_ref = 137  # satellite PRN for SBAS correction
     sbas_type = 0  # L1: 0, L5: 1
     nf = 1
 
 elif dataset == 1:  # MSAS, L1 SBAS
-    ep = [2025, 2, 15, 12, 0, 0]
-    navfile = '../data/doy2025-046/046m_rnx.nav'
-    obsfile = '../data/doy2025-046/046m_rnx.obs'  # PolaRX5
-    file_sbas = '../data/doy2025-046/046m_sbas.txt'
+    ep = [2025, 2, 15, 17, 0, 0]
+    navfile = '../data/doy2025-046/046r_rnx.nav'
+    obsfile = '../data/doy2025-046/046r_rnx.obs'  # PolaRX5
+    file_sbas = '../data/doy2025-046/046r_sbas.txt'
     xyz_ref = [-3962108.6726, 3381309.4719, 3668678.6264]
     prn_ref = 137  # satellite PRN for SBAS correction
     sbas_type = 0  # L1: 0, L5: 1
@@ -46,9 +46,9 @@ elif dataset == 1:  # MSAS, L1 SBAS
 
 elif dataset == 2:  # QZSS, L5 DFMC
     ep = [2023, 8, 11, 21, 0, 0]
-    navfile = '../data/doy223/BRD400DLR_S_20232230000_01D_MN.rnx'
-    obsfile = '../data/doy223/SEPT223Y.23O'  # PolaRX5
-    file_sbas = '../data/doy223/223v_sbas.txt'
+    navfile = '../data/brdc/BRD400DLR_S_20232230000_01D_MN.rnx'
+    obsfile = '../data/2023-doy223/SEPT223Y.23O'  # PolaRX5
+    file_sbas = '../data/2023-doy223/223v_sbas.txt'
     xyz_ref = [-3962108.6726, 3381309.4719, 3668678.6264]
     prn_ref = 189  # satellite PRN for SBAS correction
     sbas_type = 1  # L1: 0, L5: 1
@@ -171,7 +171,7 @@ if rnx.decode_obsh(obsfile) >= 0:
     nav.fout.write("Available signals\n")
     for sys, sigs in rnx.sig_map.items():
         txt = "{:7s} {}\n".format(sys2str(sys),
-                                  ' '.join([sig.str() for sig in sigs.values()]))
+                                  ' '.join([s.str() for s in sigs.values()]))
         nav.fout.write(txt)
     nav.fout.write("\n")
 
