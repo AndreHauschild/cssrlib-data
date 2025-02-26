@@ -357,7 +357,6 @@ if fig_type == 1:
     for i in range(gn.uGNSS.MAXSAT):
         idx = np.nonzero(ion[:, i])[0]
         if idx.size:
-            print(varion[:, i])
             plt.plot(t[idx], ion[idx, i], '.', markersize=8)
             plt.plot(t[idx], np.sqrt(varion[idx, i]), 'k-', markersize=8)
     plt.ylabel('Slant Iono [m]')
