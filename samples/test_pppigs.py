@@ -148,7 +148,7 @@ varion = np.zeros((nep, gn.uGNSS.MAXSAT))
 
 # Logging level
 #
-nav.monlevel = 2  # TODO: enabled for testing!
+nav.monlevel = 1  # TODO: enabled for testing!
 
 # Load RINEX OBS file header
 #
@@ -353,7 +353,6 @@ if fig_type == 1:
     # plt.legend()
 
     plt.xlabel('Time [HH:MM]')
-
 
 elif fig_type == 2:
 
