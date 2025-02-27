@@ -17,6 +17,7 @@ Note:
 import os
 import numpy as np
 import cssrlib.osnma as om
+from sys import exit as sys_exit
 from binascii import unhexlify, hexlify
 import matplotlib.pyplot as plt
 
@@ -25,14 +26,17 @@ mt_file = 'OSNMA_MerkleTree_20240115100000_newPKID_1.xml'
 
 if not os.path.exists('../data/pubkey/osnma/'+mt_file):
     print('please install OSNMA_MerkleTree*.xml from EUSPA.')
-    exit(0)
+    sys_exit(0)
 
 nma = om.osnma(mt_file)
 
 nma.flg_slowmac = False
 
-file_galinav = '../data/doy2024-305/305a_galinav.txt'
-doy = 305
+year = 2025
+doy = 46
+session = 'r'
+
+file_galinav = f'../data/doy{year}-{doy:03d}/{doy:03d}{session}_galinav.txt'
 
 dtype_ = [('tow', 'i8'), ('wn', 'i8'), ('prn', 'i8'),
           ('mt', 'i8'), ('k', 'i8'), ('nma', 'S10'),
@@ -76,7 +80,7 @@ for i, t in enumerate(tow[0:nep]):
 
 if True:
 
-    tmax = 240
+    tmax = 300
 
     fig, ax = plt.subplots()
     plt.plot(tow-tow[0], nsat[:, 0], label='tracked')
@@ -103,7 +107,7 @@ if True:
     ax.set_xticks(np.arange(0, 300, 30))
     plt.legend()
     plt.ylim([0, 6])
-    plt.xlim([0, 240])
+    plt.xlim([0, tmax])
     plt.ylabel('status')
     plt.xlabel('time [s]')
     plt.savefig('osnma-{0:d}-status.png'.format(doy))
