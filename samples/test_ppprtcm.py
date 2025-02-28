@@ -362,7 +362,7 @@ elif fig_type == 2:
     plt.legend()
     # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
 
-plotFileFormat = 'png'
+plotFileFormat = 'eps'
 plotFileName = '.'.join(('test_ppprtcm', plotFileFormat))
 
 plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight', dpi=300)
