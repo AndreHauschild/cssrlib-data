@@ -81,7 +81,7 @@ nav = Nav(nf=1)
 nav.pmode = 1  # 0: static, 1: kinematic
 nav = rnx.decode_nav(navfile, nav)
 
-# cs = sbasDec('test_stdpos.log')
+# cs = sbasDec('test_pntpos.log')
 # cs.monlevel = 0
 
 t = np.zeros(nep)
@@ -97,7 +97,7 @@ if rnx.decode_obsh(obsfile) >= 0:
 
     # Initialize position
     #
-    std = stdpos(nav, rnx.pos, 'test_stdpos.log')
+    std = stdpos(nav, rnx.pos, 'test_pntpos.log')
     nav.elmin = np.deg2rad(5.0)
 
     sol = np.zeros((nep, nav.nx))
@@ -205,6 +205,6 @@ elif fig_type == 2:
     # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
 
 plotFileFormat = 'eps'
-plotFileName = '.'.join(('test_stdpos', plotFileFormat))
+plotFileName = '.'.join(('test_pntpos', plotFileFormat))
 
 plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight', dpi=300)

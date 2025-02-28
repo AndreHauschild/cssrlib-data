@@ -44,7 +44,7 @@ if rnx.decode_obsh(obsfile) >= 0:
 
     # Initialize position
     #
-    std = stdpos(nav, rr0, 'test_stdpos2.log')
+    std = stdpos(nav, rr0, 'test_pntpos2.log')
     nav.elmin = np.deg2rad(5.0)
 
     sol = np.zeros((nep, nav.nx))
