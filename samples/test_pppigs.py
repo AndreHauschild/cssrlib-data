@@ -85,6 +85,10 @@ if 'G' in gnss:
     sigs.extend([rSigRnx("GC1C"), rSigRnx("GC2W"),
                  rSigRnx("GL1C"), rSigRnx("GL2W"),
                  rSigRnx("GS1C"), rSigRnx("GS2W")])
+if 'R' in gnss:
+    sigs.extend([rSigRnx("RC1C"), rSigRnx("RC2P"),
+                 rSigRnx("RL1C"), rSigRnx("RL2P"),
+                 rSigRnx("RS1C"), rSigRnx("RS2P")])
 if 'E' in gnss:
     sigs.extend([rSigRnx("EC1C"), rSigRnx("EC5Q"),
                  rSigRnx("EL1C"), rSigRnx("EL5Q"),
@@ -104,6 +108,10 @@ rnx.setSignals(sigs)
 nav = Nav()
 orb = peph()
 
+# Set site code for GLONASS code biases
+#
+site = "SUWN"
+
 # Positioning mode
 # 0:static, 1:kinematic
 #
@@ -121,7 +129,7 @@ nav = rnx.decode_clk(clkfile, nav)
 # Load code and phase biases from Bias-SINEX
 #
 bsx = biasdec()
-bsx.parse(bsxfile)
+bsx.parse(bsxfile, site)
 
 # Load ANTEX data for satellites and stations
 #
@@ -165,8 +173,9 @@ if rnx.decode_obsh(obsfile) >= 0:
     # Initialize position
     #
     ppp = pppos(nav, rnx.pos, 'test_pppigs.log')
-    nav.ephopt = 4  # IGS
-    nav.armode = 3  # 1: continuous, 3: fix-and-hold
+    nav.ephopt  = 4  # IGS
+    nav.armode  = 3  # 1: continuous, 3: fix-and-hold
+    nav.parmode = 1  # 1: normal, 2: partial ambiguity resolution
     nav.thresar = 2.0
 
     nav.elmin = np.deg2rad(10.0)

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 import numpy as np
 from sys import stdout
-
+from sys import exit as sys_exit
 from cssrlib.gnss import ecef2pos, Nav, ecef2enu
 from cssrlib.gnss import time2gpst, time2doy, time2str, timediff, epoch2time
 from cssrlib.gnss import rSigRnx, sys2str, uIonoModel
@@ -15,44 +15,45 @@ from cssrlib.peph import atxdec, searchpcv
 from cssrlib.pntpos import stdpos
 from cssrlib.sbas import sbasDec
 from cssrlib.rinex import rnxdec
-# from cssrlib.cssr_pvs import decode_sinca_line
+from cssrlib.cssr_pvs import decode_sinca_line
 
 
 # Select test case
 #
-dataset = 1
+dataset = 3
 
 # Start epoch and number of epochs
 #
-if dataset == 0:  # MSAS, L1 SBAS
-    ep = [2023, 8, 11, 21, 0, 0]
-    navfile = '../data/brdc/BRD400DLR_S_20232230000_01D_MN.rnx'
-    obsfile = '../data/2023-doy223/SEPT223Y.23O'  # PolaRX5
-    file_sbas = '../data/2023-doy223/223v_sbas.txt'
-    xyz_ref = [-3962108.6726, 3381309.4719, 3668678.6264]
-    prn_ref = 137  # satellite PRN for SBAS correction
-    sbas_type = 0  # L1: 0, L5: 1
-    nf = 1
-
-elif dataset == 1:  # MSAS, L1 SBAS
+if dataset == 1:  # MSAS, L1 SBAS
     ep = [2025, 2, 15, 17, 0, 0]
     navfile = '../data/doy2025-046/046r_rnx.nav'
-    obsfile = '../data/doy2025-046/046r_rnx.obs'  # PolaRX5
+    obsfile = '../data/doy2025-046/046r_rnx.obs'  # mosaic-X5
     file_sbas = '../data/doy2025-046/046r_sbas.txt'
-    xyz_ref = [-3962108.6726, 3381309.4719, 3668678.6264]
-    prn_ref = 137  # satellite PRN for SBAS correction
+    xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
+    prn_ref = [137]  # satellite PRN for SBAS correction
     sbas_type = 0  # L1: 0, L5: 1
     nf = 1
 
 elif dataset == 2:  # QZSS, L5 DFMC
-    ep = [2023, 8, 11, 21, 0, 0]
-    navfile = '../data/brdc/BRD400DLR_S_20232230000_01D_MN.rnx'
-    obsfile = '../data/2023-doy223/SEPT223Y.23O'  # PolaRX5
-    file_sbas = '../data/2023-doy223/223v_sbas.txt'
-    xyz_ref = [-3962108.6726, 3381309.4719, 3668678.6264]
-    prn_ref = 189  # satellite PRN for SBAS correction
+    ep = [2025, 2, 15, 17, 0, 0]
+    navfile = '../data/doy2025-046/046r_rnx.nav'
+    obsfile = '../data/doy2025-046/046r_rnx.obs'  # mosaic-X5
+    file_sbas = '../data/doy2025-046/046r_sbas.txt'
+    xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
+    # prn_ref = [193, 202]  # satellite PRN for SBAS correction
+    prn_ref = [199]
     sbas_type = 1  # L1: 0, L5: 1
     nf = 2
+
+elif dataset == 3:  # SouthPAN L5 DFMC
+    ep = [2025, 4, 20, 5, 0, 0]
+    # navfile = '../data/doy2025-110/ALIC00AUS0110f.nav'
+    navfile = '../data/doy2025-110/BRD400DLR_S_20251100000_01D_MN.rnx'
+    obsfile = '../data/doy2025-110/ALIC00AUS0110f.obs'
+    file_sbas = '../data/doy2025-110/DAS2025110f.txt'
+    xyz_ref = [-4052052.9320,  4212835.9496, -2545104.3074]
+    sbas_type = 1
+    nf = 1
 
 time = epoch2time(ep)
 year = ep[0]
@@ -89,6 +90,10 @@ else:  # dual frequency
         sigs.extend([rSigRnx("JC1C"), rSigRnx("JC5Q"),
                      rSigRnx("JL1C"), rSigRnx("JL5Q"),
                      rSigRnx("JS1C"), rSigRnx("JS5Q")])
+    if 'S' in gnss:
+        sigs.extend([rSigRnx("SC1C"), rSigRnx("SC5Q"),
+                     rSigRnx("SL1C"), rSigRnx("SL5Q"),
+                     rSigRnx("SS1C"), rSigRnx("SS5Q")])
 
 rnx = rnxdec()
 rnx.setSignals(sigs)
@@ -105,7 +110,7 @@ nav.pmode = 1
 nav = rnx.decode_nav(navfile, nav)
 
 cs = sbasDec('test_sbas_cs.log')
-cs.monlevel = 0
+cs.monlevel = 2
 
 # Load ANTEX data for satellites and stations
 #
@@ -189,9 +194,15 @@ if rnx.decode_obsh(obsfile) >= 0:
     while time > obs.t and obs.t.time != 0:
         obs = rnx.decode_obs()
 
-    dtype = [('wn', 'int'), ('tow', 'float'), ('prn', 'int'),
-             ('type', 'int'), ('marker', 'S2'), ('nav', 'S124')]
-    v = np.genfromtxt(file_sbas, dtype=dtype)
+    if 'sbas' in file_sbas:  # SIS
+        dtype = [('wn', 'int'), ('tow', 'float'), ('prn', 'int'),
+                 ('type', 'int'), ('marker', 'S2'), ('nav', 'S124')]
+        v = np.genfromtxt(file_sbas, dtype=dtype)
+    elif 'DAS' in file_sbas:  # DAS
+        fc = open(file_sbas, 'rt')
+    else:
+        print("ERROR: unknown file format for correction data")
+        sys_exit(1)
 
     # Loop over number of epoch from file start
     #
@@ -210,23 +221,35 @@ if rnx.decode_obsh(obsfile) >= 0:
             t0.time = t0.time//30*30
             nav.time_p = t0
 
-        vi = v[(v['tow'] == tow) & (v['prn'] == prn_ref)]
-        if sbas_type == 0:  # L1
-            vi = vi[vi['type'] <= 30]
-        else:  # DFMC L5
-            vi = vi[vi['type'] > 30]
+        if 'sbas' in file_sbas:  # SIS
 
-        #       & (v['type'] == sbas_type)]
-        if len(vi) > 0:
-            buff = unhexlify(vi['nav'][0])
-            cs.decode_cssr(buff, 0, src=sbas_type, prn=prn_ref)
+            if len(prn_ref) == 1:
+                vi = v[(v['tow'] == tow) & (v['prn'] == prn_ref)]
+            else:
+                vi = v[(v['tow'] == tow) & (v['prn'] >= prn_ref[0]) &
+                       (v['prn'] <= prn_ref[1])]
+            if sbas_type == 0:  # L1
+                vi = vi[vi['type'] <= 28]
+            else:  # DFMC L5
+                vi = vi[(vi['type'] == 31) | (vi['type'] == 32) |
+                        ((vi['type'] >= 34) & (vi['type'] <= 37))]
+            if len(vi) > 0:
+                for vi_ in vi:
+                    buff = unhexlify(vi_['nav'])
+                    cs.decode_cssr(buff, 0, src=sbas_type, prn=vi_['prn'])
+
+        else:  # DAS
+            for line in fc:
+                tc, buff = decode_sinca_line(line)
+                cs.decode_cssr(buff, 0, src=sbas_type)
+                if timediff(obs.t, tc) >= 0.0:
+                    break
 
         # cs.check_validity(obs.t)
 
         # Call PPP module with PVS corrections
         #
         std.process(obs, cs=cs)
-        # std.process(obs)
 
         # Save output
         #
@@ -241,20 +264,22 @@ if rnx.decode_obsh(obsfile) >= 0:
         # nsat[ne] = std.nsat
 
         nav.fout.write("{} {:14.4f} {:14.4f} {:14.4f} "
-                       "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, mode {:1d}\n"
+                       "ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, mode {:1d}, "
+                       "nsat {:1d}\n"
                        .format(time2str(obs.t),
                                sol[0], sol[1], sol[2],
                                enu[ne, 0], enu[ne, 1], enu[ne, 2],
                                np.sqrt(enu[ne, 0]**2+enu[ne, 1]**2),
-                               smode[ne]))
+                               smode[ne], std.nsat))
 
         # Log to standard output
         #
-        stdout.write('\r {} ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, mode {:1d}'
+        stdout.write("\r {} ENU {:7.3f} {:7.3f} {:7.3f}, 2D {:6.3f}, "
+                     "mode {:1d}, nsat {:1d}"
                      .format(time2str(obs.t),
                              enu[ne, 0], enu[ne, 1], enu[ne, 2],
                              np.sqrt(enu[ne, 0]**2+enu[ne, 1]**2),
-                             smode[ne]))
+                             smode[ne], std.nsat))
 
         # Get new epoch, exit after last epoch
         #
@@ -276,8 +301,8 @@ if rnx.decode_obsh(obsfile) >= 0:
         nav.fout.close()
 
 fig_type = 1
-ylim_h = 10.0
-ylim_v = 12.0
+ylim_h = 4.0
+ylim_v = 6.0
 
 idx2 = np.where(smode == 2)[0]
 idx1 = np.where(smode == 1)[0]
@@ -323,7 +348,7 @@ elif fig_type == 2:
     plt.legend()
     # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
 
-plotFileFormat = 'eps'
+plotFileFormat = 'png'
 plotFileName = '.'.join(('test_sbas', plotFileFormat))
 
 plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight', dpi=300)
