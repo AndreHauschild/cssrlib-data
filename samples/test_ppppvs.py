@@ -23,7 +23,7 @@ from cssrlib.cssr_pvs import decode_sinca_line
 
 # Select test case
 #
-dataset = 4
+dataset = 3
 
 # Start epoch and input files
 #

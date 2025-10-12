@@ -142,7 +142,7 @@ if time > epoch2time([2025, 5, 15, 17, 18, 0]):
     atx.readpcv('../data/antex/igs20.atx')
 else:
     atx.readpcv('../data/antex/has14_2345.atx')
-atx.readpcv('../data/antex/igs20.atx', onlyReceiver=True)
+# atx.readpcv('../data/antex/igs20.atx', onlyReceiver=True)
 
 # Initialize data structures for results
 #
@@ -278,7 +278,7 @@ if rnx.decode_obsh(obsfile) >= 0:
 
         if len(rec) >= ms_:
             if cs.monlevel >= 2:
-                print("data collected mid={:2d} ms={:2d} tow={:.0f}"
+                print(" data collected mid={:2d} ms={:2d} tow={:.0f}"
                       .format(mid_, ms_, tow))
             HASmsg = cs.decode_has_page(rec, has_pages, gMat, ms_)
             cs.decode_cssr(HASmsg)
@@ -293,7 +293,7 @@ if rnx.decode_obsh(obsfile) >= 0:
             if icnt > 2*ms_ and mid_ != -1:
                 icnt = 0
                 if cs.monlevel >= 2:
-                    print(f"reset mid={mid_} ms={ms_} tow={tow}")
+                    print(f" reset mid={mid_} ms={ms_} tow={tow}")
                 rec = []
                 mid_ = -1
 
