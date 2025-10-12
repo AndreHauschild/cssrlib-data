@@ -27,7 +27,7 @@ if False:
     xyz_ref = [-3962108.673, 3381309.574, 3668678.638]
     nav.rb = [-3959400.631, 3385704.533, 3667523.111]  # GSI 3034 fujisawa
     atxfile = '../data/antex/igs14.atx'
-else:
+elif False:
     bdir = '../data/doy2023-238/'
     navfile = bdir+'SEPT238A.23P'
     obsfile = bdir+'SEPT238A.23O'
@@ -36,20 +36,32 @@ else:
     nav.rb = [-3959400.6443, 3385704.4948, 3667523.1275]  # GSI 3034 fujisawa
     atxfile = '../data/antex/igs20.atx'
 
+else:
+    bdir = '../data/doy2025-233/'
+    navfile = bdir+'233h_rnx.nav'
+    obsfile = bdir+'233h_rnx.obs'
+    basefile = bdir+'3034233H.25o'
+    xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
+    nav.rb = [-3959400.6242, 3385704.4927, 3667523.1257]  # GSI 3034 fujisawa
+    atxfile = '../data/antex/igs20.atx'
+
 pos_ref = gn.ecef2pos(xyz_ref)
 
 # Define signals to be processed
 #
 gnss = "GEJ"  # "GEJ"
 sigs = []
+sigsb = []
 if 'G' in gnss:
     sigs.extend([rSigRnx("GC1C"), rSigRnx("GC2W"),
                  rSigRnx("GL1C"), rSigRnx("GL2W"),
                  rSigRnx("GS1C"), rSigRnx("GS2W")])
+
 if 'E' in gnss:
     sigs.extend([rSigRnx("EC1C"), rSigRnx("EC5Q"),
                  rSigRnx("EL1C"), rSigRnx("EL5Q"),
                  rSigRnx("ES1C"), rSigRnx("ES5Q")])
+
 if 'J' in gnss:
     sigs.extend([rSigRnx("JC1C"), rSigRnx("JC2L"),
                  rSigRnx("JL1C"), rSigRnx("JL2L"),
