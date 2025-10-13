@@ -8,7 +8,7 @@ import numpy as np
 import bitstruct as bs
 from binascii import unhexlify
 
-from cssrlib.cssr_has import cssr_has
+from cssrlib.cssr_has import cssr_has, cnav_msg
 
 # receiver log
 dataset = 0
@@ -48,6 +48,9 @@ gMat = np.genfromtxt(file_gm, dtype="u1", delimiter=",")
 dec = cssr_has()
 dec.monlevel = 2
 
+cnav = cnav_msg()
+cnav.load_gmat(file_gm)
+
 for i, t in enumerate(tow):
     vi = v[v['tow'] == t]
     for vn in vi:
@@ -74,7 +77,7 @@ for i, t in enumerate(tow):
 
         if len(rec) >= ms:
             print("data collected mid={:2d} ms={:2d}".format(mid_, ms))
-            HASmsg = dec.decode_has_page(rec, has_pages, gMat, ms)
+            HASmsg = cnav.decode_has_page(rec, has_pages, gMat, ms)
             dec.decode_cssr(HASmsg)
             rec = []
             has_pages = np.zeros((255, 53), dtype=int)
