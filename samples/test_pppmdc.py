@@ -4,7 +4,6 @@
 from binascii import unhexlify
 from copy import deepcopy
 import matplotlib.pyplot as plt
-import matplotlib.dates as md
 import numpy as np
 from sys import exit as sys_exit
 from sys import stdout
@@ -16,10 +15,9 @@ from cssrlib.gnss import rSigRnx
 from cssrlib.gnss import sys2str
 from cssrlib.peph import atxdec, searchpcv
 from cssrlib.cssr_mdc import cssr_mdc
-from cssrlib.cssrlib import sCSSRTYPE as sc
 from cssrlib.pppssr import pppos
 from cssrlib.rinex import rnxdec
-
+from cssrlib.plot import plot_enu
 
 # Select test case
 #
@@ -334,57 +332,11 @@ if rnx.decode_obsh(obsfile) >= 0:
         nav.fout.close()
 
 fig_type = 1
-ylim = 1.0
-
-idx4 = np.where(smode == 4)[0]
-idx5 = np.where(smode == 5)[0]
-idx0 = np.where(smode == 0)[0]
-
-fig = plt.figure(figsize=[7, 9])
-fig.set_rasterized(True)
-
-fmt = '%H:%M'
 
 if fig_type == 1:
-
-    lbl_t = ['East [m]', 'North [m]', 'Up [m]']
-
-    for k in range(3):
-        plt.subplot(4, 1, k+1)
-        plt.plot(t[idx0], enu[idx0, k], 'r.')
-        plt.plot(t[idx5], enu[idx5, k], 'y.')
-        plt.plot(t[idx4], enu[idx4, k], 'g.')
-
-        plt.ylabel(lbl_t[k])
-        plt.grid()
-        plt.ylim([-ylim, ylim])
-        plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-
-    plt.subplot(4, 1, 4)
-    plt.plot(t[idx0], ztd[idx0]*1e2, 'r.', markersize=8, label='none')
-    plt.plot(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
-    plt.plot(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
-    plt.ylabel('ZTD [cm]')
-    plt.grid()
-    plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-
-    plt.xlabel('Time [HH:MM]')
-    plt.legend()
-
+    plot_enu(t, enu, smode, ztd)
 elif fig_type == 2:
-
-    ax = fig.add_subplot(111)
-
-    plt.plot(enu[idx0, 0], enu[idx0, 1], 'r.', label='none')
-    plt.plot(enu[idx5, 0], enu[idx5, 1], 'y.', label='float')
-    plt.plot(enu[idx4, 0], enu[idx4, 1], 'g.', label='fix')
-
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.grid()
-    plt.axis('equal')
-    plt.legend()
-    # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
+    plot_enu(t, enu, smode, figtype=fig_type)
 
 plotFileFormat = 'eps'
 plotFileName = '.'.join(('test_pppmdc', plotFileFormat))
