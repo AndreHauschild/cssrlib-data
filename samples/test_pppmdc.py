@@ -8,12 +8,10 @@ import numpy as np
 from sys import exit as sys_exit
 from sys import stdout
 
-import cssrlib.gnss as gn
-from cssrlib.gnss import ecef2pos, Nav
+from cssrlib.gnss import ecef2pos, ecef2enu, Nav, rSigRnx, sys2str
 from cssrlib.gnss import time2gpst, time2doy, time2str, timediff, epoch2time
-from cssrlib.gnss import rSigRnx
-from cssrlib.gnss import sys2str
 from cssrlib.peph import atxdec, searchpcv
+from cssrlib.cssrlib import sCType as sc
 from cssrlib.cssr_mdc import cssr_mdc
 from cssrlib.pppssr import pppos
 from cssrlib.rinex import rnxdec
@@ -58,7 +56,7 @@ elif dataset == 3:
     obsfile = '../data/doy2025-233/233h_rnx.obs'  # SEPT MOSAIC-X5
     file_l6 = '../data/doy2025-233/233h_qzsl6.txt'
     xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]  # Kamakura
-    file_stec = '../data/qzsl6/2025233H.200.l6'
+    # file_stec = '../data/qzsl6/2025233H.201.l6'  # STEC correction
 
 time = epoch2time(ep)
 year = ep[0]
@@ -80,7 +78,7 @@ prn_ref = 199  # QZSS PRN
 l6_ch = 1  # 0:L6D, 1:L6E
 
 prn_ref_ext = -1
-# prn_ref_ext = 200  # QZSS PRN for iono-correction
+# prn_ref_ext = 201  # QZSS PRN for iono-correction
 l6_ch_ext = 0  # 0:L6D,1:L6E
 
 if file_stec is not None:
@@ -89,7 +87,7 @@ if file_stec is not None:
         print("ERROR: cannot open L6 message file {}!".format(file_stec))
         sys_exit(-1)
 
-iono_opt = 2 if prn_ref_ext > 0 or file_stec is not None else 1
+iono_opt = 2 if prn_ref_ext > 0 or (file_stec is not None) else 1
 
 pos_ref = ecef2pos(xyz_ref)
 
@@ -287,22 +285,30 @@ if rnx.decode_obsh(obsfile) >= 0:
                     cs_.decode_l6msg(unhexlify(vi['nav'][0]), 0)
                     if cs_.sid == 1:  # end of sub-frame
                         cs.decode_cssr(bytes(cs_.buff_p), 0)
-            if file_stec is not None:
+            if file_stec is not None:  # STEC read from file
                 cs_.decode_l6msg(fc.read(250), 0)
                 if cs_.sid == 1:  # end of sub-frame
                     cs.decode_cssr(bytes(cs_.buff_p), 0)
 
+            cs.inet = cs.find_grid_index(ecef2pos(nav.x[:3]))
+
         # Call PPP module
         #
         if (cs.lc[0].cstat & 0xf) == 0xf:
-            ppp.process(obs, cs=cs)
+            if iono_opt == 2:  # STEC is available
+                mask_s = 1 << sc.STEC
+                if cs.inet > 0 and \
+                        cs.lc[cs.inet].cstat & mask_s == mask_s:
+                    ppp.process(obs, cs=cs)
+            else:
+                ppp.process(obs, cs=cs)
 
         # Save output
         #
         t[ne] = timediff(nav.t, t0)/86400.0
 
         sol = nav.xa[0:3] if nav.smode == 4 else nav.x[0:3]
-        enu[ne, :] = gn.ecef2enu(pos_ref, sol-xyz_ref)
+        enu[ne, :] = ecef2enu(pos_ref, sol-xyz_ref)
 
         ztd[ne] = nav.xa[ppp.IT(nav.na)] \
             if nav.smode == 4 else nav.x[ppp.IT(nav.na)]
