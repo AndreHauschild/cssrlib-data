@@ -15,6 +15,7 @@ from cssrlib.peph import atxdec, searchpcv
 from cssrlib.ppprtk import ppprtkpos
 from cssrlib.rinex import rnxdec
 from binascii import unhexlify
+from cssrlib.plot import plot_enu
 
 l6_mode = 0  # 0: from receiver log, 1: from archive on QZSS
 dataset = 2
@@ -295,46 +296,11 @@ if rnx.decode_obsh(obsfile) >= 0:
         nav.fout.close()
 
 fig_type = 1
-ylim = 1.0
-
-idx4 = np.where(smode == 4)[0]
-idx5 = np.where(smode == 5)[0]
-idx0 = np.where(smode == 0)[0]
-
-fig = plt.figure(figsize=[7, 9])
-fig.set_rasterized(True)
 
 if fig_type == 1:
-
-    lbl_t = ['East [m]', 'North [m]', 'Up [m]']
-    for k in range(3):
-        plt.subplot(3, 1, k+1)
-        plt.plot(t[idx0], enu[idx0, k], 'r.', label='none')
-        plt.plot(t[idx5], enu[idx5, k], 'y.', label='float')
-        plt.plot(t[idx4], enu[idx4, k], 'g.', label='fix')
-
-        if k == 2:
-            plt.xlabel('Time [min]')
-            plt.legend()
-        plt.ylabel(lbl_t[k])
-        plt.grid()
-        plt.ylim([-ylim, ylim])
-
+    plot_enu(t, enu, smode)
 elif fig_type == 2:
-
-    ax = fig.add_subplot(111)
-
-    plt.plot(enu[idx0, 0], enu[idx0, 1], 'r.', label='none')
-    plt.plot(enu[idx5, 0], enu[idx5, 1], 'y.', label='float')
-    plt.plot(enu[idx4, 0], enu[idx4, 1], 'g.', label='fix')
-
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.grid()
-    plt.legend()
-    ylim = 0.05
-    ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
-    plt.axis('equal')
+    plot_enu(t, enu, smode, figtype=fig_type)
 
 plotFileFormat = 'eps'
 plotFileName = '.'.join(('test_ppprtk', plotFileFormat))

@@ -4,7 +4,6 @@
 from binascii import unhexlify
 from copy import deepcopy
 import matplotlib.pyplot as plt
-import matplotlib.dates as md
 import numpy as np
 from sys import exit as sys_exit
 from sys import stdout
@@ -19,7 +18,7 @@ from cssrlib.cssr_pvs import cssr_pvs
 from cssrlib.pppssr import pppos
 from cssrlib.rinex import rnxdec
 from cssrlib.cssr_pvs import decode_sinca_line
-
+from cssrlib.plot import plot_enu
 
 # Select test case
 #
@@ -300,73 +299,11 @@ if rnx.decode_obsh(obsfile) >= 0:
         nav.fout.close()
 
 fig_type = 1
-ylim = 1.0
-
-idx4 = np.where(smode == 4)[0]
-idx5 = np.where(smode == 5)[0]
-idx0 = np.where(smode == 0)[0]
-
-fig = plt.figure(figsize=[7, 9])
-fig.set_rasterized(True)
-
-fmt = '%H:%M'
-col_t = ['#d62728', '#1f77b4', '#2ca02c']  # tab:red, tab:blue, tab:green
 
 if fig_type == 1:
-
-    lbl_t = ['East [m]', 'North [m]', 'Up [m]']
-    # nm = 4
-    nm = 3
-
-    for k in range(3):
-        plt.subplot(nm, 1, k+1)
-        plt.plot(t[idx0], enu[idx0, k], color=col_t[0],
-                 marker='.', label=None if nm > 3 else 'none')
-        plt.plot(t[idx5], enu[idx5, k], color=col_t[1],
-                 marker='.', label=None if nm > 3 else 'float')
-        plt.plot(t[idx4], enu[idx4, k], color=col_t[2],
-                 marker='.', label=None if nm > 3 else 'fix')
-
-        plt.ylabel(lbl_t[k])
-        plt.grid()
-        plt.ylim([-ylim, ylim])
-        plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-        if nm < 4:
-            plt.legend()
-
-    if nm > 3:
-        plt.subplot(nm, 1, 4)
-        plt.plot(t[idx0], ztd[idx0]*1e2, color=col_t[0],
-                 marker='.', markersize=8, label='none')
-        plt.plot(t[idx5], ztd[idx5]*1e2, color=col_t[1],
-                 marker='.', markersize=8, label='float')
-        plt.plot(t[idx4], ztd[idx4]*1e2, color=col_t[2],
-                 marker='.', markersize=8, label='fix')
-        plt.ylabel('ZTD [cm]')
-        plt.grid()
-        plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-        plt.legend()
-
-    plt.xlabel('Time [HH:MM]')
-
-
+    plot_enu(t, enu, smode, ztd)
 elif fig_type == 2:
-
-    ax = fig.add_subplot(111)
-
-    plt.plot(enu[idx0, 0], enu[idx0, 1],
-             color=col_t[0], marker='.', label='none')
-    plt.plot(enu[idx5, 0], enu[idx5, 1],
-             color=col_t[1], marker='.', label='float')
-    plt.plot(enu[idx4, 0], enu[idx4, 1],
-             color=col_t[2], marker='.', label='fix')
-
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.grid()
-    plt.axis('equal')
-    plt.legend()
-    # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
+    plot_enu(t, enu, smode, figtype=fig_type)
 
 plotFileFormat = 'png'
 plotFileName = '.'.join(('test_ppppvs', plotFileFormat))

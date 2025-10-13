@@ -2,11 +2,8 @@
  static test for PPP (Galileo HAS SIS)
 """
 
-from binascii import unhexlify
-import bitstruct as bs
 from copy import deepcopy
 import matplotlib.pyplot as plt
-import matplotlib.dates as md
 import numpy as np
 from sys import exit as sys_exit
 from sys import stdout
@@ -17,9 +14,10 @@ from cssrlib.gnss import time2gpst, time2doy, time2str, timediff, epoch2time
 from cssrlib.gnss import rSigRnx, prn2sat, uGNSS
 from cssrlib.gnss import sys2str
 from cssrlib.peph import atxdec, searchpcv
-from cssrlib.cssr_has import cssr_has
+from cssrlib.cssr_has import cssr_has, cnav_msg
 from cssrlib.pppssr import pppos
 from cssrlib.rinex import rnxdec
+from cssrlib.plot import plot_enu
 
 
 # Select test case
@@ -133,7 +131,10 @@ cs.monlevel = 2
 """
 
 file_gm = "Galileo-HAS-SIS-ICD_1.0_Annex_B_Reed_Solomon_Generator_Matrix.txt"
-gMat = np.genfromtxt(file_gm, dtype="u1", delimiter=",")
+
+# Galileo CNAV message parser
+cnav = cnav_msg()
+cnav.load_gmat(file_gm)
 
 # Load ANTEX data for satellites and stations
 #
@@ -220,13 +221,6 @@ if rnx.decode_obsh(obsfile) >= 0:
         nav.fout.write(txt+"\n")
     nav.fout.write("\n")
 
-    mid_ = -1
-    ms_ = -1
-    icnt = 0
-    rec = []
-    mid_decoded = []
-    has_pages = np.zeros((255, 53), dtype=int)
-
     # Skip epochs until start time
     #
     obs = rnx.decode_obs()
@@ -251,51 +245,11 @@ if rnx.decode_obsh(obsfile) >= 0:
             nav.time_p = t0
 
         vi = v[v['tow'] == tow]
-        for vn in vi:
-            buff = unhexlify(vn['nav'])
-            i = 14
-            if bs.unpack_from('u24', buff, i)[0] == 0xaf3bc3:
-                continue
-            hass, res = bs.unpack_from('u2u2', buff, i)
-            i += 4
-            if hass >= 2:  # 0:test,1:operational,2:res,3:dnu
-                continue
-            mt, mid, ms, pid = bs.unpack_from('u2u5u5u8', buff, i)
 
-            cs.msgtype = mt
-            ms += 1
-            i += 20
-
-            if mid_ == -1 and mid not in mid_decoded:
-                mid_ = mid
-                ms_ = ms
-            if mid == mid_ and pid-1 not in rec:
-                page = bs.unpack_from('u8'*53, buff, i)
-                rec += [pid-1]
-                has_pages[pid-1, :] = page
-
-            # print(f"{mt} {mid} {ms} {pid}")
-
-        if len(rec) >= ms_:
-            if cs.monlevel >= 2:
-                print(" data collected mid={:2d} ms={:2d} tow={:.0f}"
-                      .format(mid_, ms_, tow))
-            HASmsg = cs.decode_has_page(rec, has_pages, gMat, ms_)
-            cs.decode_cssr(HASmsg)
-            rec = []
-
-            mid_decoded += [mid_]
-            mid_ = -1
-            if len(mid_decoded) > 10:
-                mid_decoded = mid_decoded[1:]
-        else:
-            icnt += 1
-            if icnt > 2*ms_ and mid_ != -1:
-                icnt = 0
-                if cs.monlevel >= 2:
-                    print(f" reset mid={mid_} ms={ms_} tow={tow}")
-                rec = []
-                mid_ = -1
+        HASmsg = cnav.decode_cnav(tow, vi)  # decode CNAV pages
+        if HASmsg is not None:
+            cs.msgtype = cnav.msgtype
+            cs.decode_cssr(HASmsg)  # decode HAS messages
 
         # Call PPP module with HAS corrections
         #
@@ -350,60 +304,13 @@ if rnx.decode_obsh(obsfile) >= 0:
         nav.fout.close()
 
 fig_type = 1
-ylim = 1.0
-
-idx4 = np.where(smode == 4)[0]
-idx5 = np.where(smode == 5)[0]
-idx0 = np.where(smode == 0)[0]
-
-fig = plt.figure(figsize=[7, 9])
-fig.set_rasterized(True)
-
-fmt = '%H:%M'
 
 if fig_type == 1:
-
-    lbl_t = ['East [m]', 'North [m]', 'Up [m]']
-
-    for k in range(3):
-        plt.subplot(4, 1, k+1)
-        plt.plot(t[idx0], enu[idx0, k], 'r.')
-        plt.plot(t[idx5], enu[idx5, k], 'y.')
-        plt.plot(t[idx4], enu[idx4, k], 'g.')
-
-        plt.ylabel(lbl_t[k])
-        plt.grid()
-        plt.ylim([-ylim, ylim])
-        plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-
-    plt.subplot(4, 1, 4)
-    plt.plot(t[idx0], ztd[idx0]*1e2, 'r.', markersize=8, label='none')
-    plt.plot(t[idx5], ztd[idx5]*1e2, 'y.', markersize=8, label='float')
-    plt.plot(t[idx4], ztd[idx4]*1e2, 'g.', markersize=8, label='fix')
-    plt.ylabel('ZTD [cm]')
-    plt.grid()
-    plt.gca().xaxis.set_major_formatter(md.DateFormatter(fmt))
-
-    plt.xlabel('Time [HH:MM]')
-    plt.legend()
-
+    plot_enu(t, enu, smode, ztd)
 elif fig_type == 2:
+    plot_enu(t, enu, smode, figtype=fig_type)
 
-    ax = fig.add_subplot(111)
-
-    plt.plot(enu[idx0, 0], enu[idx0, 1], 'r.', label='none')
-    plt.plot(enu[idx5, 0], enu[idx5, 1], 'y.', label='float')
-    plt.plot(enu[idx4, 0], enu[idx4, 1], 'g.', label='fix')
-
-    plt.xlabel('Easting [m]')
-    plt.ylabel('Northing [m]')
-    plt.grid()
-    plt.axis('equal')
-    plt.legend()
-    # ax.set(xlim=(-ylim, ylim), ylim=(-ylim, ylim))
-
-plotFileFormat = 'eps'
+plotFileFormat = 'eps'  # 'eps' or 'png'
 plotFileName = '.'.join(('test_ppphas', plotFileFormat))
-
 plt.savefig(plotFileName, format=plotFileFormat, bbox_inches='tight', dpi=300)
 # plt.show()

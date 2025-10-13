@@ -7,19 +7,19 @@ import numpy as np
 from sys import exit as sys_exit
 from sys import stdout
 
-import cssrlib.rinex as rn
-import cssrlib.gnss as gn
-
-from cssrlib.gnss import rSigRnx, time2str
+from cssrlib.rinex import rnxdec, sync_obs
+from cssrlib.gnss import rSigRnx, time2str, timediff, Nav, ecef2pos, ecef2enu
 from cssrlib.peph import atxdec, searchpcv
 from cssrlib.rtk import rtkpos
+from cssrlib.plot import plot_enu
 
 ngsantfile = '../data/GSI_PCV.TXT'
 
-nav = gn.Nav()
+nav = Nav()
 
+dataset = 3
 
-if False:
+if dataset == 1:
     bdir = '../data/doy2021-078/'
     navfile = bdir+'SEPT078M.21P'
     obsfile = bdir+'SEPT078M.21O'
@@ -27,7 +27,7 @@ if False:
     xyz_ref = [-3962108.673, 3381309.574, 3668678.638]
     nav.rb = [-3959400.631, 3385704.533, 3667523.111]  # GSI 3034 fujisawa
     atxfile = '../data/antex/igs14.atx'
-elif False:
+elif dataset == 2:
     bdir = '../data/doy2023-238/'
     navfile = bdir+'SEPT238A.23P'
     obsfile = bdir+'SEPT238A.23O'
@@ -36,7 +36,7 @@ elif False:
     nav.rb = [-3959400.6443, 3385704.4948, 3667523.1275]  # GSI 3034 fujisawa
     atxfile = '../data/antex/igs20.atx'
 
-else:
+elif dataset == 3:
     bdir = '../data/doy2025-233/'
     navfile = bdir+'233h_rnx.nav'
     obsfile = bdir+'233h_rnx.obs'
@@ -45,7 +45,7 @@ else:
     nav.rb = [-3959400.6242, 3385704.4927, 3667523.1257]  # GSI 3034 fujisawa
     atxfile = '../data/antex/igs20.atx'
 
-pos_ref = gn.ecef2pos(xyz_ref)
+pos_ref = ecef2pos(xyz_ref)
 
 # Define signals to be processed
 #
@@ -68,13 +68,13 @@ if 'J' in gnss:
                  rSigRnx("JS1C"), rSigRnx("JS2L")])
 
 # rover
-dec = rn.rnxdec()
+dec = rnxdec()
 dec.setSignals(sigs)
 
 dec.decode_nav(navfile, nav)
 
 # base
-decb = rn.rnxdec()
+decb = rnxdec()
 decb.setSignals(sigs)
 
 decb.decode_obsh(basefile)
@@ -124,14 +124,14 @@ print("  Antenna :", decb.ant)
 print()
 
 for ne in range(nep):
-    obs, obsb = rn.sync_obs(dec, decb)
+    obs, obsb = sync_obs(dec, decb)
     if ne == 0:
         t0 = nav.t = obs.t
 
     rtk.process(obs, obsb=obsb)
-    t[ne] = gn.timediff(nav.t, t0)
+    t[ne] = timediff(nav.t, t0)/86400.0
     sol = nav.xa[0:3] if nav.smode == 4 else nav.x[0:3]
-    enu[ne, :] = gn.ecef2enu(pos_ref, sol-xyz_ref)
+    enu[ne, :] = ecef2enu(pos_ref, sol-xyz_ref)
     smode[ne] = nav.smode
 
     nav.fout.write("{} {:14.4f} {:14.4f} {:14.4f} "
@@ -158,25 +158,11 @@ dec.fobs.close()
 decb.fobs.close()
 
 fig_type = 1
-ylim = 0.2
-
-fig = plt.figure(figsize=[7, 9])
-fig.set_rasterized(True)
 
 if fig_type == 1:
-    plt.plot(t, enu)
-    plt.xticks(np.arange(0, nep+1, step=30))
-    plt.ylabel('position error [m]')
-    plt.xlabel('time[s]')
-    plt.legend(['east', 'north', 'up'])
-    plt.grid()
-    plt.axis([0, ne, -ylim, ylim])
-else:
-    plt.plot(enu[:, 0], enu[:, 1])
-    plt.xlabel('easting [m]')
-    plt.ylabel('northing [m]')
-    plt.grid()
-    plt.axis([-ylim, ylim, -ylim, ylim])
+    plot_enu(t, enu, smode)
+elif fig_type == 2:
+    plot_enu(t, enu, smode, figtype=fig_type)
 
 plotFileFormat = 'eps'
 plotFileName = '.'.join(('test_rtk', plotFileFormat))
