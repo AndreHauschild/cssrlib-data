@@ -24,6 +24,8 @@ from cssrlib.plot import plot_enu
 l6_mode = 0  # 0: from receiver log, 1: from archive on QZSS
 dataset = 3
 
+file_stec = None
+
 # Start epoch and number of epochs
 #
 if dataset == 0:
@@ -56,6 +58,7 @@ elif dataset == 3:
     obsfile = '../data/doy2025-233/233h_rnx.obs'  # SEPT MOSAIC-X5
     file_l6 = '../data/doy2025-233/233h_qzsl6.txt'
     xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]  # Kamakura
+    file_stec = '../data/qzsl6/2025233H.200.l6'
 
 time = epoch2time(ep)
 year = ep[0]
@@ -80,7 +83,13 @@ prn_ref_ext = -1
 # prn_ref_ext = 200  # QZSS PRN for iono-correction
 l6_ch_ext = 0  # 0:L6D,1:L6E
 
-iono_opt = 2 if prn_ref_ext > 0 else 1
+if file_stec is not None:
+    fc = open(file_stec, 'rb')
+    if not fc:
+        print("ERROR: cannot open L6 message file {}!".format(file_stec))
+        sys_exit(-1)
+
+iono_opt = 2 if prn_ref_ext > 0 or file_stec is not None else 1
 
 pos_ref = ecef2pos(xyz_ref)
 
@@ -129,7 +138,7 @@ nav = rnx.decode_nav(navfile, nav)
 cs = cssr_mdc()
 cs.monlevel = 0
 
-if prn_ref_ext > 0:
+if prn_ref_ext > 0 or file_stec is not None:
     cs_ = cssr_mdc()
     cs_.monlevel = 0
 else:
@@ -278,6 +287,10 @@ if rnx.decode_obsh(obsfile) >= 0:
                     cs_.decode_l6msg(unhexlify(vi['nav'][0]), 0)
                     if cs_.sid == 1:  # end of sub-frame
                         cs.decode_cssr(bytes(cs_.buff_p), 0)
+            if file_stec is not None:
+                cs_.decode_l6msg(fc.read(250), 0)
+                if cs_.sid == 1:  # end of sub-frame
+                    cs.decode_cssr(bytes(cs_.buff_p), 0)
 
         # Call PPP module
         #

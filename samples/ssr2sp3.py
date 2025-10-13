@@ -22,7 +22,7 @@ from cssrlib.peph import atxdec
 from cssrlib.peph import peph, peph_t, apc2com
 from cssrlib.cssrlib import sCSSRTYPE as sc
 from cssrlib.cssr_bds import cssr_bds
-from cssrlib.cssr_has import cssr_has
+from cssrlib.cssr_has import cssr_has, cnav_msg
 from cssrlib.cssr_mdc import cssr_mdc
 from cssrlib.cssr_pvs import cssr_pvs
 from cssrlib.rinex import rnxdec
@@ -120,7 +120,9 @@ ssrfiles = []
 if len(sys_argv) > 1:
     ssrfiles = sys_argv[1:]
 else:
-    ssrfiles = ['../data/doy2025-046/046r_gale6.txt', ]
+    ssrfiles = ['../data/doy2025-233/233h_gale6.txt', ]
+
+#    ssrfiles = ['../data/doy2025-046/046r_gale6.txt', ]
 
 # Start time and interval length
 #
@@ -238,7 +240,8 @@ for navfile in navfiles:
 if 'gale6' in ssrfiles[0]:
     cs = cssr_has()
     file_gm = baseDirName+'Galileo-HAS-SIS-ICD_1.0_Annex_B_Reed_Solomon_Generator_Matrix.txt'
-    gMat = np.genfromtxt(file_gm, dtype="u1", delimiter=",")
+    cnav = cnav_msg()
+    cnav.load_gmat(file_gm)
 elif 'qzsl6' in ssrfiles[0]:
     cs = cssr_mdc()
 elif "bdsb2b" in ssrfiles[0]:
@@ -304,46 +307,12 @@ for vi in v:
         cs.week = week
         cs.tow0 = tow//3600*3600
 
-        buff = unhexlify(vi['nav'])
-        i = 14
-        if bs.unpack_from('u24', buff, i)[0] == 0xaf3bc3:
-            continue
-        hass, res = bs.unpack_from('u2u2', buff, i)
-        i += 4
-        if hass >= 2:  # 0:test,1:operational,2:res,3:dnu
-            continue
-        mt, mid, ms, pid = bs.unpack_from('u2u5u5u8', buff, i)
-
-        cs.msgtype = mt
-        ms += 1
-        i += 20
-
-        if mid_ == -1 and mid not in mid_decoded:
-            mid_ = mid
-            ms_ = ms
-        if mid == mid_ and pid-1 not in rec:
-            page = bs.unpack_from('u8'*53, buff, i)
-            rec += [pid-1]
-            has_pages[pid-1, :] = page
-
-        if len(rec) >= ms_:
-            HASmsg = cs.decode_has_page(rec, has_pages, gMat, ms_)
+        HASmsg = cnav.decode_cnav(tow, [vi])
+        if HASmsg is not None:
             cs.decode_cssr(HASmsg)
-            if ms_ == 2: # only clock messages
+            if cnav.ms_ == 2:
                 hasNew = (cs.lc[0].cstat & 0xf) == 0xf
                 time = cs.time
-
-            rec = []
-            mid_decoded += [mid_]
-            mid_ = -1
-            if len(mid_decoded) > 10:
-                mid_decoded = mid_decoded[1:]
-        else:
-            icnt += 1
-            if icnt > 10 and mid_ != -1:
-                icnt = 0
-                rec = []
-                mid_ = -1
 
     elif cs.cssrmode == sc.QZS_MADOCA:
 
@@ -406,12 +375,12 @@ for vi in v:
     if hasNew:
 
         hasNew = False
-        
+
         """
         print("{} {} cs {}"
               .format(name,time2str(time),time2str(cs.time)))
         """
-        
+
         ns = len(cs.sat_n)
 
         rs = np.ones((ns, 3))*np.nan
@@ -516,8 +485,8 @@ for vi in v:
         if len(nav.peph) > 0:
             while timediff(time, nav.peph[-1].time) > step:
                 print("WARNING: {} missing epoch in SP3 file {}"
-                      .format(name,time2str(timeadd(nav.peph[-1].time,step))))
-                peph = peph_t(timeadd(nav.peph[-1].time,step))
+                      .format(name, time2str(timeadd(nav.peph[-1].time, step))))
+                peph = peph_t(timeadd(nav.peph[-1].time, step))
                 nav.peph.append(peph)
 
         # Store orbit and clock offset in SP3
