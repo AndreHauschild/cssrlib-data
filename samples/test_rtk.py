@@ -40,7 +40,7 @@ elif dataset == 3:
     bdir = '../data/doy2025-233/'
     navfile = bdir+'233h_rnx.nav'
     obsfile = bdir+'233h_rnx.obs'
-    basefile = bdir+'3034233H.25o'
+    basefile = bdir+'3034233h.25o'
     xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
     nav.rb = [-3959400.6242, 3385704.4927, 3667523.1257]  # GSI 3034 fujisawa
     atxfile = '../data/antex/igs20.atx'
