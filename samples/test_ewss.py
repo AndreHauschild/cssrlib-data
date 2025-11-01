@@ -86,7 +86,7 @@ if True:
 
 
 if flg_plt:
-    extent = [128, 134, 30, 35]
+    extent = [128, 134, 30, 35]  # kyusyu, Japan
 
     fig = plt.figure()
 
