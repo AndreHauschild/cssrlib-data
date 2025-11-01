@@ -11,6 +11,10 @@ from cssrlib.rtcm import rtcm, rtcme, Integrity
 from random import randint, seed, sample
 from binascii import unhexlify
 
+# Validity Period DFi065
+vp_tbl = [1, 2, 5, 10, 15, 30, 60, 120, 240,
+          300, 600, 900, 1800, 3600, 7200, 10800]
+
 
 def read_asc(file):
     b = bytearray()
@@ -38,9 +42,13 @@ def gen_data(mt, sys_t, svid_t):
 
         # issue of GNSS satellite mask DFi010
         intr.pid = randint(0, 4095)  # provider id DFi027 (0-4095)
-        intr.tow = randint(0, 604799)  # tow
-        intr.vp = randint(0, 15)  # validity period DFi065 (0-15)
-        intr.uri = randint(0, 65535)  # update rate interval DFi067
+        intr.tow = randint(0, 604799)*1e-3  # tow
+        intr.vp = vp_tbl[randint(0, 15)]  # validity period DFi065 (0-15)
+        intr.uri = randint(0, 65535)*0.1  # update rate interval DFi067
+
+        intr.pidssr = randint(0, 65535)  # SSR Provider ID DFi078 (0-65535)
+        intr.sidssr = randint(0, 15)  # SSR Solution Type DFi076 (0-15)
+        intr.iodssr = randint(0, 15)  # SSR IOD DFi077 (0-15)
 
     return intr
 
@@ -61,6 +69,9 @@ def write_rtcm(file_rtcm, msg_t, intr, nep=1):
 
     cs = rtcme()
     cs.integ = copy.deepcopy(intr)
+    cs.iodssr = intr.iodssr
+    cs.pid = intr.pidssr
+    cs.sid = intr.sidssr
 
     fc = open(file_rtcm, 'wb')
     if not fc:
@@ -111,16 +122,17 @@ def decode_rtcm(msg, intr=None, nep=1, logfile=None, maxlen=1024):
             k += cs.dlen
 
             if intr is not None:
-                print(cs.integ.pid == intr.pid)
-                print(cs.integ.tow == intr.tow)
-                print(cs.integ.flag == intr.flag)
-                print(cs.integ.nid == intr.nid)
-                print(cs.integ.iod_sys == intr.iod_sys)
+                print(f"pid: {cs.integ.pid == intr.pid}")
+                print(f"tow: {cs.integ.tow == intr.tow}")
+                print(f"flag: {cs.integ.flag == intr.flag}")
+                # print(f"iodsys: {cs.integ.iod_sys == intr.iod_sys}")
 
-                if cs.msgtype == 11:
-                    print(cs.integ.vp == intr.vp)
-                    print(cs.integ.uri == intr.uri)
+                print(f"vp: {cs.integ.vp == intr.vp}")
+                print(f"uri: {cs.integ.uri == intr.uri}")
 
+                print(f"pidssr: {cs.pid == intr.pidssr}")
+                print(f"sidssr: {cs.sid == intr.sidssr}")
+                print(f"iodssr: {cs.iodssr == intr.iodssr}")
     return cs
 
 
