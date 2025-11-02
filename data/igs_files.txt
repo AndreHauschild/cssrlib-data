@@ -40,3 +40,6 @@ igs   ftp://gdc.cddis.eosdis.nasa.gov/pub/gps/products/2176/COD0MGXFIN_202126500
 igs   ftp://gdc.cddis.eosdis.nasa.gov/pub/gps/products/2149/COD0MGXFIN_20210780000_01D_01D_OSB.BIA.gz
 igs   ftp://gdc.cddis.eosdis.nasa.gov/pub/gps/products/2149/COD0MGXFIN_20210780000_01D_05M_ORB.SP3.gz
 igs   ftp://gdc.cddis.eosdis.nasa.gov/pub/gps/products/2149/COD0MGXFIN_20210780000_01D_30S_CLK.CLK.gz
+
+qzsl6  https://l6msg.go.gnss.go.jp/archives/2025/233/2025233H.200.l6
+qzsl6  https://l6msg.go.gnss.go.jp/archives/2025/233/2025233H.201.l6
