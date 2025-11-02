@@ -172,7 +172,7 @@ if __name__ == "__main__":
 
     # GNSS satellite mask DFi009
     prn_rng_t = {uGNSS.GPS: [1, 32],  # Table 8.5-1
-                 uGNSS.GLO: [1, 24],  # Table 8.5-3
+                 uGNSS.GLO: [1, 27],  # Table 8.5-3
                  uGNSS.GAL: [1, 36],  # Table 8.5-5
                  uGNSS.BDS: [1, 63],
                  uGNSS.QZS: [193, 209],
