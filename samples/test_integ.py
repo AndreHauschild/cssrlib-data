@@ -175,7 +175,7 @@ if __name__ == "__main__":
                  uGNSS.GLO: [1, 24],  # Table 8.5-3
                  uGNSS.GAL: [1, 36],  # Table 8.5-5
                  uGNSS.BDS: [1, 63],
-                 uGNSS.QZS: [193, 202],
+                 uGNSS.QZS: [193, 209],
                  uGNSS.IRN: [1, 14]}
 
     mt = msg_t[0]
