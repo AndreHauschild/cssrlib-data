@@ -3,8 +3,8 @@
 """
 u-blox Receiver UBX messages decoder
 
- [1] u-blox 20 HPG 2.00, High precision GNSS receiver
-     Interface description, UBXDOC-304424225-19888, R01, May, 2025
+ [1] u-blox X20 HPG 2.02, High precision GNSS receiver
+     Interface description, UBXDOC-304424225-19967, R02, September, 2025
 
 @author Rui Hirokawa
 """
@@ -432,7 +432,7 @@ def decode(f, opt, args):
 
     bdir, fname = os.path.split(f)
 
-    prefix = fname[4:].removesuffix('.ubx')+'_'
+    prefix = fname.removesuffix('.ubx')[-4:]+'_'
     prefix = str(Path(bdir) / prefix) if bdir else prefix
     ubxdec = ubx(opt, prefix=prefix, gnss_t=args.gnss)
     ubxdec.monlevel = 1
@@ -442,6 +442,9 @@ def decode(f, opt, args):
     if fname.startswith('ubf9'):
         ubxdec.re.anttype = "JAVRINGANT_DM   JVDM"
         ubxdec.re.rectype = "UBLOX F9P           "
+    elif fname.startswith('ux2'):
+        ubxdec.re.anttype = "JAVRINGANT_DM   JVDM"
+        ubxdec.re.rectype = "UBLOX X20P          "
     else:
         ubxdec.re.anttype = args.antenna
         ubxdec.re.rectype = args.receiver

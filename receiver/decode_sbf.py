@@ -117,7 +117,7 @@ class sbf(rcvDec):
         crc = Crc16Xmodem.calc(msg[k+4:k+len_])
         if crc_ != crc:
             if self.monlevel > 0:
-                print("checksum error.")
+                print(f"checksum error: id={id_}.")
             return False
         return True
 
@@ -644,10 +644,12 @@ class sbf(rcvDec):
                 elif src & 0x1f == 21:  # E5b
                     type_ = 2
                 else:
+                    if self.monlevel > 0:
+                        print(f"unknown src: {src}")
                     return -1
 
                 if crcpass != 1:
-                    if self.monlevel > 2:
+                    if self.monlevel > 1:
                         print("crc error in GALRawINAV " +
                               "{:6d}\t{:2d}\t{:1d}\t{:1d}\t{:2d}".
                               format(int(self.tow), prn, crcpass, cnt,
@@ -1036,7 +1038,7 @@ def decode(f, opt, args):
 
     bdir, fname = os.path.split(f)
 
-    prefix = fname[4:].removesuffix('.sbf')+'_'
+    prefix = fname.removesuffix('.sbf')[-4:]+'_'
     prefix = str(Path(bdir) / prefix) if bdir else prefix
     sbfdec = sbf(opt, prefix=prefix, gnss_t=args.gnss)
     sbfdec.monlevel = 1
