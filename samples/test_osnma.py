@@ -18,12 +18,11 @@ import os
 import numpy as np
 import cssrlib.osnma as om
 from sys import exit as sys_exit
-from binascii import unhexlify, hexlify
+from binascii import unhexlify
 import matplotlib.pyplot as plt
 
 tofst = -2  # time offset to synchronize tow
 mt_file = 'OSNMA_MerkleTree_20240115100000_newPKID_1.xml'
-
 if not os.path.exists('../data/pubkey/osnma/'+mt_file):
     print('please install OSNMA_MerkleTree*.xml from EUSPA.')
     sys_exit(0)
@@ -57,7 +56,7 @@ vstatus = np.zeros(ntow, dtype=int)
 
 # nep = 90
 # nep = 180
-nep = 300
+# nep = 300
 nep = 1799
 
 for i, t in enumerate(tow[0:nep]):
@@ -80,7 +79,7 @@ for i, t in enumerate(tow[0:nep]):
 
 if True:
     fsz = 11
-    tmax = 300
+    tmax = 600
 
     fig, ax = plt.subplots()
     plt.plot(tow-tow[0], nsat[:, 0], '.-', label='tracked')
@@ -89,7 +88,7 @@ if True:
     plt.grid()
     plt.legend()
     plt.xlim([0, tmax])
-    ax.set_xticks(np.arange(0, 300, 30))
+    ax.set_xticks(np.arange(0, tmax, 60))
     plt.ylabel('number of satellites', fontsize=fsz)
     plt.xlabel('time [s]', fontsize=fsz)
     plt.savefig('osnma-{0:d}-nsat-{1:d}.png'.format(doy, tmax))
@@ -104,7 +103,7 @@ if True:
         plt.plot(tow[idx]-tow[0], y[idx]*(k+1), '.', label=lbl_t[k])
     plt.grid()
     ax.set_yticks(np.arange(0, 6))
-    ax.set_xticks(np.arange(0, 300, 30))
+    ax.set_xticks(np.arange(0, tmax, 60))
     plt.legend()
     plt.ylim([0, 6])
     plt.xlim([0, tmax])
