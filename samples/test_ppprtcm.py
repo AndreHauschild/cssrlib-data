@@ -4,8 +4,7 @@
 
 import os
 from copy import deepcopy
-from cssrlib.gnss import ecef2pos, Nav, load_config
-from cssrlib.gnss import time2doy, timediff, epoch2time
+from cssrlib.gnss import Nav, load_config, time2doy, timediff, epoch2time
 from cssrlib.cssrlib import sCSSRTYPE, sCType
 from cssrlib.rtcm import rtcm
 from cssrlib.pppssr import pppos
@@ -17,7 +16,7 @@ config = load_config('config.yml')
 # Select test case
 #
 icase = 3
-nep = 900*4
+nep = 900*4-5
 
 ttl = 'test_ppprtcm'
 navfile = None
@@ -130,11 +129,11 @@ for ne in range(nep):
     # Set initial epoch
     #
     if ne == 0:
-        nav.t = deepcopy(obs.t)
-        t0 = deepcopy(obs.t)
-        t0.time = t0.time//30*30
-        nav.time_p = t0
-        # proc.init_time(obs.t)
+        # nav.t = deepcopy(obs.t)
+        # t0 = deepcopy(obs.t)
+        # t0.time = t0.time//30*30
+        # nav.time_p = t0
+        proc.init_time(obs.t)
 
     while True:
         stat = cs.sync(msg, k)

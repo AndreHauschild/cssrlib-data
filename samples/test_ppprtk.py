@@ -43,6 +43,8 @@ navfile = None
 file_l6 = None
 ttl = 'test_ppprtk'
 l6_ch = 0  # 0:L6D, 1:L6E
+prn_p1 = 199
+prn_p2 = -1
 
 if l6_mode == 1:  # from archive
 
@@ -73,9 +75,14 @@ else:  # from receiver log
         ep = [2025, 8, 21, 7, 0, 0]
         xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
 
-    # from Tab 4.1.1-1 of IS-QZSS-L6
-    prn_p1 = 199  # QZSS PRN pattern 1 (195, 197, 199)
-    prn_p2 = 194  # QZSS PRN pattern 2 (194, 196)
+    elif dataset == 2:
+
+        ep = [2025, 8, 21, 7, 0, 0]
+        xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
+
+        # from Tab 4.1.1-1 of IS-QZSS-L6
+        prn_p1 = 199  # QZSS PRN pattern 1 (195, 197, 199)
+        prn_p2 = 194  # QZSS PRN pattern 2 (194, 196)
 
 
 time = epoch2time(ep)
