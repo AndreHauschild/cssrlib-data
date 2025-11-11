@@ -13,30 +13,21 @@ from binascii import unhexlify
 from cssrlib.utils import process
 
 
-def decode_msg(v, tow, l6_ch, prn_p1, prn_p2=-1):
+def decode_msg(v, tow, l6_ch, prn_ref):
     """ find valid correction message """
-    msg, msg2 = None, None
 
-    vi = v[(v['tow'] == tow) & (v['type'] == l6_ch)]
-    vi_p1 = vi[vi['prn'] == prn_p1]
-    vi_p2 = vi[vi['prn'] == prn_p2]
-    if len(vi_p1) > 0:
-        msg = unhexlify(vi_p1['nav'][0])
+    msg = None
+    vi = v[(v['tow'] == tow) & (v['type'] == l6_ch) & (v['prn'] == prn_ref)]
+    if len(vi) > 0:
+        msg = unhexlify(vi['nav'][0])
 
-    if len(vi_p2) > 0:
-        msg2 = unhexlify(vi_p2['nav'][0])
-
-        cs_.decode_l6msg(unhexlify(vi_p2['nav'][0]), 0)
-        if cs_.fcnt == 5:  # end of sub-frame
-            cs_.decode_cssr(bytes(cs_.buff), 0)
-
-    return msg, msg2
+    return msg
 
 
 config = load_config('config.yml')
 
 l6_mode = 0  # 0: from receiver log, 1: from archive on QZSS
-dataset = 1
+dataset = 2
 nep = 900*4
 
 navfile = None
@@ -70,12 +61,12 @@ else:  # from receiver log
         navfile = '../data/doy2023-223/NAV223.23p'
         obsfile = '../data/doy2023-223/SEPT223Y.23O'  # PolaRX5
 
-    elif dataset == 1:
+    elif dataset == 1:  # single channel
 
         ep = [2025, 8, 21, 7, 0, 0]
         xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
 
-    elif dataset == 2:
+    elif dataset == 2:  # two channel
 
         ep = [2025, 8, 21, 7, 0, 0]
         xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
@@ -157,6 +148,8 @@ obs = rnx.decode_obs()
 while time > obs.t and obs.t.time != 0:
     obs = rnx.decode_obs()
 
+msg, msg2 = None, None
+
 for ne in range(nep):
     week, tow = cs.set_time(obs.t)  # set time for reference
 
@@ -169,12 +162,15 @@ for ne in range(nep):
             cs.week = week
             cs.decode_cssr(cs.buff, 0)
     else:
-        msg, msg2 = decode_msg(v, tow, l6_ch, prn_p1, prn_p2)
+        msg = decode_msg(v, tow, l6_ch, prn_p1)
 
         if msg is not None:
             cs.decode_l6msg(msg, 0)
             if cs.fcnt == 5:  # end of sub-frame
                 cs.decode_cssr(bytes(cs.buff), 0)
+
+        if prn_p2 > 0:
+            msg2 = decode_msg(v, tow, l6_ch, prn_p2)
 
         if msg2 is not None:
             cs_.decode_l6msg(msg2, 0)
