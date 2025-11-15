@@ -176,6 +176,7 @@ for ne in range(nep):
             cs_.decode_l6msg(msg2, 0)
             if cs_.fcnt == 5:  # end of sub-frame
                 cs_.decode_cssr(bytes(cs_.buff), 0)
+                cs.merge_cssr(cs_)
 
     cstat = cs.chk_stat()
     if cstat:

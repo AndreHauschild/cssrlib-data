@@ -4,7 +4,7 @@
 from binascii import unhexlify
 import numpy as np
 
-from cssrlib.gnss import ecef2pos, Nav, load_config, time2doy, epoch2time
+from cssrlib.gnss import Nav, load_config, time2doy, epoch2time
 from cssrlib.cssr_bds import cssr_bds
 from cssrlib.pppssr import pppos
 from cssrlib.rinex import rnxdec
