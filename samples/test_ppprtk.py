@@ -24,11 +24,12 @@ def decode_msg(v, tow, l6_ch, prn_ref):
     return msg
 
 
-config = load_config('config.yml')
+config = load_config('config_ppprtk.yml')
 
 l6_mode = 0  # 0: from receiver log, 1: from archive on QZSS
-dataset = 2
+dataset = 3
 nep = 900*4
+nep = 60
 
 navfile = None
 file_l6 = None
@@ -36,6 +37,8 @@ ttl = 'test_ppprtk'
 l6_ch = 0  # 0:L6D, 1:L6E
 prn_p1 = 199
 prn_p2 = -1
+
+sig_t = {'G': ['1C', '2W'], 'E': ['1C', '5Q'], 'J': ['1C', '2L']}  # GEJ
 
 if l6_mode == 1:  # from archive
 
@@ -75,6 +78,10 @@ else:  # from receiver log
         prn_p1 = 199  # QZSS PRN pattern 1 (195, 197, 199)
         prn_p2 = 194  # QZSS PRN pattern 2 (194, 196)
 
+    elif dataset == 3:  # single channel
+
+        ep = [2025, 8, 21, 0, 0, 0]
+        xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
 
 time = epoch2time(ep)
 year = ep[0]
@@ -95,21 +102,19 @@ time = epoch2time(ep)
 if time < epoch2time([2022, 11, 27, 0, 0, 0]):
     config['atxfile'] = '../data/antex/igs14.atx'
 
-griddef = '../data/clas_grid.def'
+griddef = config['griddef']
 
 pos_ref = ecef2pos(xyz_ref)
 
 cs = cssr()
-cs.monlevel = 1
+cs.monlevel = config['cs']['monlevel']
 cs.week = time2gpst(time)[0]
 cs.read_griddef(griddef)
 
 cs_ = cssr()
-cs_.monlevel = 1
+cs_.monlevel = config['cs']['monlevel']
 cs_.week = cs.week
 cs_.read_griddef(griddef)
-
-sig_t = {'G': ['1C', '2W'], 'E': ['1C', '5Q'], 'J': ['1C', '2L']}  # GEJ
 
 rnx = rnxdec()
 nav = Nav()
@@ -123,7 +128,7 @@ rnx.decode_obsh(obsfile)
 
 # Initialize position
 #
-ppprtk = ppprtkpos(nav, rnx.pos, f'{ttl}.log')
+ppprtk = ppprtkpos(nav, rnx.pos, logfile=f'{ttl}.log', config=config)
 
 proc.prepare_signal(obsfile)
 
