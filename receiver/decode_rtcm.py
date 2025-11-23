@@ -48,6 +48,7 @@ class rtcmDec(rcvDec):
                 uTYP.S: [rSigRnx('GS1C'), rSigRnx('GS1W'), rSigRnx('GS2W'),
                          rSigRnx('GS2L'), rSigRnx('GS5Q'), rSigRnx('GS1L')],
             }
+
         if 'R' in gnss_t:
             self.sig_tab[uGNSS.GLO] = {
                 uTYP.C: [rSigRnx('RC1C'), rSigRnx('RC1P'), rSigRnx('RC2C'),
@@ -57,6 +58,7 @@ class rtcmDec(rcvDec):
                 uTYP.S: [rSigRnx('RS1C'), rSigRnx('RS1P'), rSigRnx('RS2C'),
                          rSigRnx('RS2P'), rSigRnx('RS3X')],
             }
+
         if 'E' in gnss_t:
             self.sig_tab[uGNSS.GAL] = {
                 uTYP.C: [rSigRnx('EC1C'), rSigRnx('EC5Q'), rSigRnx('EC7Q'),
@@ -66,6 +68,7 @@ class rtcmDec(rcvDec):
                 uTYP.S: [rSigRnx('ES1C'), rSigRnx('ES5Q'), rSigRnx('GS7Q'),
                          rSigRnx('ES8Q'), rSigRnx('ES6C')],
             }
+
         if 'C' in gnss_t:
             self.sig_tab[uGNSS.BDS] = {
                 uTYP.C: [rSigRnx('CC1P'), rSigRnx('CC2I'), rSigRnx('CC5P'),
@@ -75,21 +78,24 @@ class rtcmDec(rcvDec):
                 uTYP.S: [rSigRnx('CS1P'), rSigRnx('CS2I'), rSigRnx('CS5P'),
                          rSigRnx('CS6I'), rSigRnx('CS7D'), rSigRnx('CS7I')],
             }
+
         if 'J' in gnss_t:
             self.sig_tab[uGNSS.QZS] = {
-                uTYP.C: [rSigRnx('JC1C'), rSigRnx('JC1L'), rSigRnx('JC2L'),
-                         rSigRnx('JC5Q'), rSigRnx('JC6X'), rSigRnx('JC1E')],
-                uTYP.L: [rSigRnx('JL1C'), rSigRnx('JL1L'), rSigRnx('JL2L'),
-                         rSigRnx('JL5Q'), rSigRnx('JL6X'), rSigRnx('JL1E')],
-                uTYP.S: [rSigRnx('JS1C'), rSigRnx('JS1L'), rSigRnx('JS2L'),
-                         rSigRnx('JS5Q'), rSigRnx('JS6X'), rSigRnx('JS1E')],
+                uTYP.C: [rSigRnx('JC1C'), rSigRnx('JC1E'), rSigRnx('JC1L'),
+                         rSigRnx('JC2L'), rSigRnx('JC5Q'), rSigRnx('JC6X')],
+                uTYP.L: [rSigRnx('JL1C'), rSigRnx('JL1E'), rSigRnx('JL1L'),
+                         rSigRnx('JL2L'), rSigRnx('JL5Q'), rSigRnx('JL6X')],
+                uTYP.S: [rSigRnx('JS1C'), rSigRnx('JS1E'), rSigRnx('JS1L'),
+                         rSigRnx('JS2L'), rSigRnx('JS5Q'), rSigRnx('JS6X')],
             }
+
         if 'S' in gnss_t:
             self.sig_tab[uGNSS.SBS] = {
                 uTYP.C: [rSigRnx('SC1C'), rSigRnx('SC5X')],
                 uTYP.L: [rSigRnx('SL1C'), rSigRnx('SL5X')],
                 uTYP.S: [rSigRnx('SS1C'), rSigRnx('SS5X')],
             }
+
         if 'I' in gnss_t:
             self.sig_tab[uGNSS.IRN] = {
                 uTYP.C: [rSigRnx('IC5A'), rSigRnx('IC1X')],
@@ -158,18 +164,39 @@ class rtcmDec(rcvDec):
         self.obs.sat = np.empty(0, dtype=int)
         self.obs.sig = {}
 
+       #     if tow_p > 0 and tow_p != obs.tow:
+       #         flg_head = True
+       #         k = 0
+       #         f.seek(0)
+
+       #     tow_p = obs.tow
+
+       #     if not flg_head:
+       #         for sys in self.sig:
+       #             self.re.sig_tab[sys] = self.sig[sys]
+       # self.re.rnx_obs_header_sent
+
     def decode(self, buff, len_, sys=[], prn=[]):
 
         _, obs, eph, geph, seph = self.rtcm.decode(buff, len_)
 
         if self.flg_rnxobs and obs is not None:
             self.time = obs.time
-            self.re.rnx_obs_header(obs.time, self.fh_rnxobs)
 
             if timediff(self.time, self.time_p) != 0.0:
+
+                if self.time_p.time > 0:
+                    self.re.rnx_obs_header(self.obs.time, self.fh_rnxobs)
+
                 if self.obs is not None:
-                    self.re.rnx_obs_body(self.obs, self.fh_rnxobs)
+                    if self.re.rnx_obs_header_sent:
+                        self.re.rnx_obs_body(self.obs, self.fh_rnxobs)
+
                 self.init_obs(obs.time)
+
+            if not self.re.rnx_obs_header_sent:
+                for sys in obs.sig:
+                    self.re.sig_tab[sys] = obs.sig[sys]
 
             self.add_obs(obs)
 
@@ -200,6 +227,7 @@ def decode(f, opt, args):
 
     path = str(Path(bdir) / fname) if bdir else fname
     blen = os.path.getsize(path)
+
     with open(path, 'rb') as f:
         msg = f.read(blen)
         maxlen = len(msg)-5
