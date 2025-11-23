@@ -80,7 +80,7 @@ else:  # from receiver log
 
     elif dataset == 3:  # single channel
 
-        ep = [2025, 8, 21, 0, 0, 0]
+        ep = [2025, 8, 21, 7, 0, 0]
         xyz_ref = [-3962108.6836, 3381309.5672, 3668678.6720]
 
 time = epoch2time(ep)
